@@ -83,6 +83,8 @@ namespace SHETSource {
 			 *
 			 * @param comms A Comms object which allows bytes to be sent and recieved
 			 *        from a remote SHETSource server.
+			 * @param address A relative address at which this client should appear
+			 *        under in shet.
 			 */
 			Client(Comms *comms, char *address);
 			
