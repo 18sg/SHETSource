@@ -11,33 +11,33 @@ pins(new_pins)
 
 
 bool
-Comms::available(void)
+Comms::Available(void)
 {
-	return pins->read() == LOW;
+	return pins->Read() == LOW;
 }
 
 
 inline void
-Comms::clock(void)
+Comms::Clock(void)
 {
 	delayMicroseconds(COMMS_CLOCK_PERIOD);
 }
 
 
 inline void
-Comms::halfClock(void)
+Comms::HalfClock(void)
 {
 	delayMicroseconds(COMMS_CLOCK_PERIOD / 2);
 }
 
 
 bool
-Comms::waitTimeout(uint8_t target_state)
+Comms::WaitTimeout(uint8_t target_state)
 {
 	// Busy-loop until the remote device signals that it is ready or the timeout
 	// expires.
 	long time = 0;
-	while (pins->read() != target_state) {
+	while (pins->Read() != target_state) {
 		time ++;
 		if (time >= TIMEOUT_CYCLES) {
 			return false;
@@ -49,43 +49,43 @@ Comms::waitTimeout(uint8_t target_state)
 
 
 bool
-Comms::write(uint8_t byte)
+Comms::Write(uint8_t byte)
 {
 	// Signal that we're waiting to write
-	pins->write(LOW);
+	pins->Write(LOW);
 	
 	// Wait until the remote device acknowledges or the timeout expires.
-	if (!waitTimeout(LOW)) {
-		pins->write(HIGH);
+	if (!WaitTimeout(LOW)) {
+		pins->Write(HIGH);
 		return false;
 	}
 	
 	// Start sending data
 	int bit;
 	for (bit = 0; bit < 8; bit ++) {
-		pins->write((byte & (1<<bit)) ? HIGH : LOW);
-		clock();
+		pins->Write((byte & (1<<bit)) ? HIGH : LOW);
+		Clock();
 	}
 	
 	// Wait until the remote device is finished recieving...
-	if (!waitTimeout(HIGH)) {
-		pins->write(HIGH);
+	if (!WaitTimeout(HIGH)) {
+		pins->Write(HIGH);
 		return false;
 	}
 	
 	// Return the line to the idle state as an end bit
-	pins->write(HIGH);
+	pins->Write(HIGH);
 	
 	return true;
 }
 
 
 bool
-Comms::write(uint8_t *buf, int len)
+Comms::Write(uint8_t *buf, int len)
 {
 	int offset;
 	for (offset = 0; offset < len; offset ++) {
-		if (!write(*(buf + offset)))
+		if (!Write(*(buf + offset)))
 			return false;
 	}
 	
@@ -93,33 +93,47 @@ Comms::write(uint8_t *buf, int len)
 }
 
 
+bool
+Comms::Write(char *str)
+{
+	int offset = -1;
+	do {
+		offset ++;
+		if (!Write(*(str + offset)))
+			return false;
+	} while (*(str + offset) != '\0');
+	
+	return true;
+}
+
+
 int
-Comms::read()
+Comms::Read()
 {
 	// Wait until the remote device acknowledges or the timeout expires.
-	if (!waitTimeout(LOW))
+	if (!WaitTimeout(LOW))
 		return -1;
 	
 	// Signal that this device is ready
-	pins->write(LOW);
+	pins->Write(LOW);
 	
 	// Wait half a clock cycle so that we're sampling around the middle of the
 	// waveform.
-	halfClock();
+	HalfClock();
 	
 	// Start receiving data
 	uint8_t data = 0x00;
 	int bit;
 	for (bit = 0; bit < 8; bit ++) {
-		data |= ((pins->read() == HIGH) ? 1 : 0) << bit;
-		clock();
+		data |= ((pins->Read() == HIGH) ? 1 : 0) << bit;
+		Clock();
 	}
 	
 	// Return the line to the idle state
-	pins->write(HIGH);
+	pins->Write(HIGH);
 	
 	// Wait until the remote device is finished sending...
-	if (!waitTimeout(HIGH)) {
+	if (!WaitTimeout(HIGH)) {
 		return -1;
 	}
 
@@ -128,12 +142,12 @@ Comms::read()
 
 
 bool
-Comms::read(uint8_t *buf, int len)
+Comms::Read(void *buf, int len)
 {
 	int offset;
 	int data;
 	for (offset = 0; offset < len; offset ++) {
-		data = read();
+		data = Read();
 		if (data != -1) {
 			*(buf + offset) = (uint8_t) data;
 		} else {

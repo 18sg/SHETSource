@@ -10,21 +10,22 @@ class Comms;
 class Comms {
 	private:
 		Pins *pins;
-		void clock(void);
-		void halfClock(void);
+		void Clock(void);
+		void HalfClock(void);
 		
-		bool waitTimeout(uint8_t target_state);
+		bool WaitTimeout(uint8_t target_state);
 	
 	public:
 		Comms(Pins *new_pins);
 		
-		bool write(uint8_t byte);
-		bool write(uint8_t *buf, int len);
+		bool Write(uint8_t byte);
+		bool Write(uint8_t *buf, int len);
+		bool Write(char *str);
 		
-		int read();
-		bool read(uint8_t *buf, int len);
+		int  Read();
+		bool Read(uint8_t *buf, int len);
 		
-		bool available(void);
+		bool Available(void);
 };
 
 #endif
