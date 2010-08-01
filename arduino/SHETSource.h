@@ -10,15 +10,20 @@
 
 namespace SHETSource {
 	
-	/* This is bad practice but allows the commands struct to be kept in a
+	/* This is bad practice but allows these structs to be kept in a
 	 * separate file while just being part of this file as far as users
 	 * are concerned. */
 	#include "SHETSource_commands.h"
+	#include "SHETSource_types.h"
 	
 	typedef enum _status_t {
-		STATUS_CONNECTED       = 0x00,
-		STATUS_BOOTING         = 0x01,
-		STATUS_UNKNOWN_COMMAND = 0x02,
+		STATUS_CONNECTED         = 0x00,
+		STATUS_RESETTING         = 0x01,
+		STATUS_HIGH_LATENCY      = 0x02,
+		STATUS_MALFORMED_COMMAND = 0x04 | STATUS_RESETTING,
+		STATUS_IO_FAIL           = 0x08 | STATUS_RESETTING,
+		STATUS_READ_FAIL         = 0x10 | STATUS_IO_FAIL,
+		STATUS_WRITE_FAIL        = 0x20 | STATUS_IO_FAIL,
 	} status_t;
 	
 	typedef int action_id_t;
@@ -34,25 +39,6 @@ namespace SHETSource {
 	
 	
 	/**
-	 * We take-over the arduino setup call and so provide this alternative setup
-	 * for the user to define. It is called once after the Client has been created
-	 * but before it starts its mainloop.
-	 */
-	void setup(Client *client);
-	
-	
-	/**
-	 * We take-over the arduino mainloop and so provide this alternative mainloop
-	 * for the user to define. It is called only when the client is connected and
-	 * not waiting to reset.
-	 *
-	 * The user should take care to ensure that this function does not block for a
-	 * significant amount of time
-	 */
-	void loop(Client *client);
-	
-	
-	/**
 	 * A SHETSource client object -- handles communication with a SHETSource
 	 * server over the Comms link provided to the constructor.
 	 *
@@ -63,6 +49,8 @@ namespace SHETSource {
 	class Client {
 		protected:
 			Comms *comms;
+			
+			char *address;
 			
 			status_t state;
 			
@@ -77,6 +65,17 @@ namespace SHETSource {
 			uint8_t status_led;
 			void UpdateStatusLED(void);
 			
+			void MainLoop(void);
+			
+			void HandleRequests(void);
+			void InitialiseWithServer(void);
+			
+			void OnRcvReset(void);
+			void OnRcvPing(void);
+			void OnRcvCallAction(void);
+			void OnRcvSetProperty(void);
+			void OnRcvGetProperty(void);
+		
 		
 		public:
 			/**
@@ -85,7 +84,7 @@ namespace SHETSource {
 			 * @param comms A Comms object which allows bytes to be sent and recieved
 			 *        from a remote SHETSource server.
 			 */
-			Client(Comms *comms);
+			Client(Comms *comms, char *address);
 			
 			/**
 			 * Handle requests from the server.
@@ -94,8 +93,45 @@ namespace SHETSource {
 			 * run frequently enough for this device to respond in time to the
 			 * server's requests.
 			 */
-			bool Sync(void);
+			void DoSHET(void);
 		
+		public:
+			/**
+			 * Read from the comms connection and on error also set the status bits.
+			 */
+			bool Read(uint8_t *buf, int len);
+			
+			/**
+			 * Write to the comms connection and on error also set the status bits.
+			 */
+			bool Write(uint8_t *buf, int len);
+			
+			/**
+			 * Write a null-terminated string to the comms connection and set status
+			 * buts on error.
+			 */
+			bool Write(char *str);
+			
+			bool ReadCommand     (command_t     *x) {return Read (x, sizeof(*x));};
+			bool ReadInt         (int           *x) {return Read (x, sizeof(*x));};
+			bool ReadActionID    (action_id_t   *x) {return Read (x, sizeof(*x));};
+			bool ReadEventID     (event_id_t    *x) {return Read (x, sizeof(*x));};
+			bool ReadPropertyID  (property_id_t *x) {return Read (x, sizeof(*x));};
+			
+			bool WriteString     (char          *x) {return Write(x);};
+			bool WriteCommand    (command_t      x) {return Write(&x, sizeof(x));};
+			bool WriteCommand    (command_t     *x) {return Write(x, sizeof(*x));};
+			bool WriteType       (type_t         x) {return Write(&x, sizeof(x));};
+			bool WriteType       (type_t        *x) {return Write(x, sizeof(*x));};
+			bool WriteInt        (int           *x) {return Write(x, sizeof(*x));};
+			bool WriteActionID   (action_id_t   *x) {return Write(x, sizeof(*x));};
+			bool WriteEventID    (event_id_t    *x) {return Write(x, sizeof(*x));};
+			bool WritePropertyID (property_id_t *x) {return Write(x, sizeof(*x));};
+			
+			status_t GetState(void);
+			void SetState(status_t val);
+			void ORState(status_t val);
+			
 		public:
 			/**
 			 * Register an action with the server.
@@ -226,19 +262,30 @@ namespace SHETSource {
 			int  (*callback_ii)(int value);
 		
 		public:
-			void Setup(static char *address, void (*callback)(void));
-			void Setup(static char *address, void (*callback)(int value));
-			void Setup(static char *address, int  (*callback)(void));
-			void Setup(static char *address, int  (*callback)(int value));
+			void Add(static char *address, void (*callback)(void));
+			void Add(static char *address, void (*callback)(int value));
+			void Add(static char *address, int  (*callback)(void));
+			void Add(static char *address, int  (*callback)(int value));
 			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void operator () (void);
 	};
 	
 	
 	
 	class LocalEvent : public Local<event_id_t> {
 		public:
-			void Setup(static char *address);
+			void Add(static char *address, type_t type);
 			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void operator () (void);
+			void operator () (int);
 	};
 	
 	
@@ -250,12 +297,17 @@ namespace SHETSource {
 			int  (*get_callback)(void);
 		
 		public:
-			void Setup(static char *address,
-			           void (*set_callback)(int value),
-			           int  (*get_callback)(void));
-			void Setup(static char *address, int *var);
-			
+			void Add(static char *address,
+			         void (*set_callback)(int value),
+			         int  (*get_callback)(void));
+			void Add(static char *address, int *var);
 			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void Set(void);
+			void Get(void);
 	};
 	
 }

@@ -5,8 +5,9 @@
 using namespace SHETSource;
 
 
-Client::Client(Comms *comms) :
-comms(comms)
+Client::Client(Comms *comms, char *address) :
+comms(comms),
+address(address)
 {
 	action_id_t a;
 	for (a = 0; a < NUM_ACTIONS; a++)
@@ -28,14 +29,22 @@ comms(comms)
 /* Communicating with the server **********************************************/
 
 
-bool
-Client::Sync(void)
+void
+Client::DoSHET(void)
 {
-	if (comms->available()) {
-		HandleCommands();
-	}
+	/* Do not return control to the program until the reset has completed. */
+	do {
+		MainLoop();
+	} while (GetState() & STATUS_RESETTING);
+}
+
+
+void
+Client::MainLoop(void)
+{
+	HandleRequest();
 	
-	if (status & STATUS_BOOTING) {
+	if (GetState() & STATUS_RESETTING) {
 		InitialiseWithServer();
 	}
 	
@@ -44,14 +53,90 @@ Client::Sync(void)
 
 
 void
-UpdateStatusLED(void)
+Client::HandleRequests(void)
+{
+	if (comms->available()) {
+		
+		command_t command;
+		if (!ReadCommand(&command)) return;
+		
+		switch (command) {
+			case COMMAND_RESET           : OnRcvReset(void);          break;
+			case COMMAND_PING            : OnRcvPing(void);           break;
+			case COMMAND_CALL_ACTION     : OnRcvCallAction(void);     break;
+			case COMMAND_SET_PROPERTY    : OnRcvSetProperty(void);    break;
+			case COMMAND_GET_PROPERTY    : OnRcvGetProperty(void);    break;
+			
+			default:
+				ORState(STATUS_MALFORMED_COMMAND);
+				break;
+		}
+	}
+}
+
+
+void
+Client::InitialiseWithServer(void)
+{
+	/* If the remote end is trying to write then we can't send a reset. */
+	if (!comms->available()) {
+		// Send a reset
+		WriteCommand(COMMAND_RESET);
+		WriteString(address);
+		
+		// Send registration commands
+		action_id_t a;
+		for (a = 0; a < NUM_ACTIONS; a++)
+			actions[a]->Register();
+		
+		event_id_t e;
+		for (e = 0; e < NUM_EVENTS; e++)
+			events[e]->Register();
+		
+		property_id_t p;
+		for (p = 0; p < NUM_PROPERTIES; p++)
+			properties[p]->Register();
+		
+		// Everything is working again now, reset the status bitfield
+		SetState(STATUS_CONNECTED);
+	}
+}
+
+
+/* Status display *************************************************************/
+
+
+status_t
+Client::GetState(void)
+{
+	return state;
+}
+
+
+void
+Client::SetState(status_t val)
+{
+	state = val;
+}
+
+
+void
+Client::ORState(status_t val)
+{
+	state |= val;
+}
+
+
+void
+Client::UpdateStatusLED(void)
 {
 	uint8_t blink_pattern;
 	
-	switch (state) {
-		case STATUS_CONNECTED       : blink_pattern = 0xFF; /* 11111111 */ break;
-		case STATUS_BOOTING         : blink_pattern = 0xAA; /* 10101010 */ break;
-		case STATUS_UNKNOWN_COMMAND : blink_pattern = 0xA0; /* 10100000 */ break;
+	switch (GetState()) {
+		case STATUS_MALFORMED_COMMAND : blink_pattern = 0xAF; /* 10101111 */ break;
+		case STATUS_RESETTING         : blink_pattern = 0xAA; /* 10101010 */ break;
+		case STATUS_HIGH_LATENCY      : blink_pattern = 0xF0; /* 00001111 */ break;
+		case STATUS_CONNECTED         : blink_pattern = 0xFF; /* 11111111 */ break;
 	}
 	
 	int step = ((millis() / 100) % 8);
@@ -107,7 +192,7 @@ Client::AddAction(static char *address, void (*callback)(void))
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
 	
-	actions[id].Setup(address, callback);
+	actions[id].Add(address, callback);
 	
 	return &(actions[id]);
 }
@@ -119,7 +204,7 @@ Client::AddAction(static char *address, void (*callback)(int value))
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
 	
-	actions[id].Setup(address, callback);
+	actions[id].Add(address, callback);
 	
 	return &(actions[id]);
 }
@@ -131,7 +216,7 @@ Client::AddAction(static char *address, int (*callback)(void))
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
 	
-	actions[id].Setup(address, callback);
+	actions[id].Add(address, callback);
 	
 	return &(actions[id]);
 }
@@ -143,7 +228,7 @@ Client::AddAction(static char *address, int (*callback)(int value))
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
 	
-	actions[id].Setup(address, callback);
+	actions[id].Add(address, callback);
 	
 	return &(actions[id]);
 }
@@ -164,7 +249,7 @@ Client::AddEvent(static char *address)
 	event_id_t id = GetNextEventID();
 	ASSERT(id > 0);
 	
-	events[id].Setup(address);
+	events[id].Add(address);
 	
 	return &(events[id]);
 }
@@ -188,7 +273,7 @@ Client::AddProperty(static char *address,
 	property_id_t id = GetNextPropertyID();
 	ASSERT(id > 0);
 	
-	properties[id].Setup(address, get_callback, set_callback);
+	properties[id].Add(address, get_callback, set_callback);
 	
 	return &(events[id]);
 }

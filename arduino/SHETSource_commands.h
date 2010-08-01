@@ -41,8 +41,8 @@ typedef enum _command_t {
 	 *   Arguments:
 	 *     int   ID to use to reffer to this action from here on.
 	 *     \0    Relative address of this action.
-	 *     type  The type of argument required by the action
 	 *     type  The type of return value from the action being executed.
+	 *     type  The type of argument required by the action
 	 */
 	COMMAND_ADD_ACTION      = 0x03,
 	
@@ -54,7 +54,6 @@ typedef enum _command_t {
 	 *   Arguments:
 	 *     int   ID to use to refer to this event from here on.
 	 *     \0    Relative address of this event.
-	 *     type  The type of argument the event may send.
 	 */
 	COMMAND_ADD_EVENT       = 0x04,
 	
@@ -111,6 +110,7 @@ typedef enum _command_t {
 	 *
 	 *   Arguments:
 	 *     int   ID of the event raised.
+	 *     type  The type of data to follow
 	 *     ?     Any data of the type that was specified during registration.
 	 */
 	COMMAND_RAISE_EVENT     = 0x09,
@@ -149,6 +149,17 @@ typedef enum _command_t {
 	 *     ?     Data of the type that was specified during registration.
 	 */
 	COMMAND_GET_PROPERTY    = 0x0c,
+	
+	
+	/**
+	 * Master -> Slave:
+	 *   Returns a value, for example after a get property request or an action
+	 *   being performed.
+	 *
+	 *   Responses:
+	 *     ?     Data of the type that was specified during registration.
+	 */
+	COMMAND_RETURN          = 0x0d,
 	
 } command_t;
 
