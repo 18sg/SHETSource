@@ -1,5 +1,6 @@
 #include "WProgram.h"
-#include "Comms.h"
+#include "pins.h"
+#include "comms.h"
 #include "SHETSource.h"
 
 using namespace SHETSource;
@@ -15,7 +16,7 @@ Client::OnRcvReset(void)
 void
 Client::OnRcvPing(void)
 {
-	COMMS_WRITEVAR(status);
+	WriteState(GetState());
 }
 
 
@@ -30,7 +31,7 @@ Client::OnRcvCallAction(void)
 		return;
 	}
 	
-	actions[action_id](this);
+	actions[action_id]();
 }
 
 
@@ -45,7 +46,7 @@ Client::OnRcvSetProperty(void)
 		return;
 	}
 	
-	properties[property_id].Set(this);
+	properties[property_id].Set();
 }
 
 

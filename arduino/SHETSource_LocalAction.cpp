@@ -1,12 +1,13 @@
 #include "WProgram.h"
-#include "Comms.h"
+#include "pins.h"
+#include "comms.h"
 #include "SHETSource.h"
 
 using namespace SHETSource;
 
 
 void
-LocalAction::Add(static char *address, void (*callback)(void))
+LocalAction::Add(char *address, void (*callback)(void))
 {
 	this->address = address;
 	this->callback_vv = callback;
@@ -17,7 +18,7 @@ LocalAction::Add(static char *address, void (*callback)(void))
 
 
 void
-LocalAction::Add(static char *address, void (*callback)(int value))
+LocalAction::Add(char *address, void (*callback)(int value))
 {
 	this->address = address;
 	this->callback_vv = NULL;
@@ -28,7 +29,7 @@ LocalAction::Add(static char *address, void (*callback)(int value))
 
 
 void
-LocalAction::Add(static char *address, int (*callback)(void))
+LocalAction::Add(char *address, int (*callback)(void))
 {
 	this->address = address;
 	this->callback_vv = NULL;
@@ -39,7 +40,7 @@ LocalAction::Add(static char *address, int (*callback)(void))
 
 
 void
-LocalAction::Add(static char *address, int (*callback)(int value))
+LocalAction::Add(char *address, int (*callback)(int value))
 {
 	this->address = address;
 	this->callback_vv = NULL;

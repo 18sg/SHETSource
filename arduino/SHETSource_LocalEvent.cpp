@@ -1,12 +1,13 @@
 #include "WProgram.h"
-#include "Comms.h"
+#include "pins.h"
+#include "comms.h"
 #include "SHETSource.h"
 
 using namespace SHETSource;
 
 
 void
-LocalEvent::Add(static char *address)
+LocalEvent::Add(char *address)
 {
 	this->address = address;
 }
@@ -29,7 +30,7 @@ LocalEvent::operator () (void)
 	
 	if (!( client->WriteCommand(COMMAND_RAISE_EVENT)
 	    && client->WriteEventID(&id)
-	    && client->WriteInt(TYPE_VOID))) {
+	    && client->WriteType(TYPE_VOID))) {
 		/* Something went wrong! */
 		return;
 	}

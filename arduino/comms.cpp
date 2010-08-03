@@ -6,7 +6,7 @@ Comms::Comms(Pins *new_pins):
 pins(new_pins)
 {
 	// Set the output line to high (idle)
-	pins->write(HIGH);
+	pins->Write(HIGH);
 }
 
 
@@ -142,7 +142,7 @@ Comms::Read()
 
 
 bool
-Comms::Read(void *buf, int len)
+Comms::Read(uint8_t *buf, int len)
 {
 	int offset;
 	int data;

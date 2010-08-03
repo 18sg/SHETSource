@@ -16,7 +16,7 @@ namespace SHETSource {
 	#include "SHETSource_commands.h"
 	#include "SHETSource_types.h"
 	
-	typedef enum _status_t {
+	typedef enum _status_enum_t {
 		STATUS_CONNECTED         = 0x00,
 		STATUS_RESETTING         = 0x01,
 		STATUS_HIGH_LATENCY      = 0x02,
@@ -24,7 +24,9 @@ namespace SHETSource {
 		STATUS_IO_FAIL           = 0x08 | STATUS_RESETTING,
 		STATUS_READ_FAIL         = 0x10 | STATUS_IO_FAIL,
 		STATUS_WRITE_FAIL        = 0x20 | STATUS_IO_FAIL,
-	} status_t;
+	} status_enum_t;
+	
+	typedef uint8_t status_t;
 	
 	typedef int action_id_t;
 	typedef int event_id_t;
@@ -32,10 +34,94 @@ namespace SHETSource {
 	
 	class Client;
 	
-	class Local;
+	template <class id_t> class Local;
 	class LocalAction;
 	class LocalEvent;
 	class LocalProperty;
+	
+	
+	template <class id_t>
+	class Local {
+		protected:
+			Client *client;
+			char   *address;
+			id_t    id;
+		
+		public:
+			void
+			Init(Client *client, id_t id)
+			{
+				this->client  = client;
+				this->id      = id;
+				this->address = 0;
+			};
+			
+			bool
+			InUse(void)
+			{
+				return this->address != NULL;
+			};
+	};
+	
+	
+	
+	class LocalAction : public Local<action_id_t> {
+		protected:
+			void (*callback_vv)(void);
+			void (*callback_vi)(int value);
+			int  (*callback_iv)(void);
+			int  (*callback_ii)(int value);
+		
+		public:
+			void Add(char *address, void (*callback)(void));
+			void Add(char *address, void (*callback)(int value));
+			void Add(char *address, int  (*callback)(void));
+			void Add(char *address, int  (*callback)(int value));
+			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void operator () (void);
+	};
+	
+	
+	
+	class LocalEvent : public Local<event_id_t> {
+		public:
+			void Add(char *address);
+			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void operator () (void);
+			void operator () (int);
+	};
+	
+	
+	
+	class LocalProperty : public Local<property_id_t> {
+		protected:
+			int   *var;
+			void (*set_callback)(int value);
+			int  (*get_callback)(void);
+		
+		public:
+			void Add(char *address,
+			         void (*set_callback)(int value),
+			         int  (*get_callback)(void));
+			void Add(char *address, int *var);
+			void Remove(void);
+			
+			void Register(void);
+			void Unregister(void);
+			
+			void Set(void);
+			void Get(void);
+	};
+	
+	
 	
 	
 	/**
@@ -88,6 +174,8 @@ namespace SHETSource {
 			 */
 			Client(Comms *comms, char *address);
 			
+			void Init(void);
+			
 			/**
 			 * Handle requests from the server.
 			 * 
@@ -114,21 +202,22 @@ namespace SHETSource {
 			 */
 			bool Write(char *str);
 			
-			bool ReadCommand     (command_t     *x) {return Read (x, sizeof(*x));};
-			bool ReadInt         (int           *x) {return Read (x, sizeof(*x));};
-			bool ReadActionID    (action_id_t   *x) {return Read (x, sizeof(*x));};
-			bool ReadEventID     (event_id_t    *x) {return Read (x, sizeof(*x));};
-			bool ReadPropertyID  (property_id_t *x) {return Read (x, sizeof(*x));};
+			bool ReadCommand    (command_t     *x){return Read ((uint8_t *)x, sizeof(*x));};
+			bool ReadInt        (int           *x){return Read ((uint8_t *)x, sizeof(*x));};
+			bool ReadActionID   (action_id_t   *x){return Read ((uint8_t *)x, sizeof(*x));};
+			bool ReadEventID    (event_id_t    *x){return Read ((uint8_t *)x, sizeof(*x));};
+			bool ReadPropertyID (property_id_t *x){return Read ((uint8_t *)x, sizeof(*x));};
 			
-			bool WriteString     (char          *x) {return Write(x);};
-			bool WriteCommand    (command_t      x) {return Write(&x, sizeof(x));};
-			bool WriteCommand    (command_t     *x) {return Write(x, sizeof(*x));};
-			bool WriteType       (type_t         x) {return Write(&x, sizeof(x));};
-			bool WriteType       (type_t        *x) {return Write(x, sizeof(*x));};
-			bool WriteInt        (int           *x) {return Write(x, sizeof(*x));};
-			bool WriteActionID   (action_id_t   *x) {return Write(x, sizeof(*x));};
-			bool WriteEventID    (event_id_t    *x) {return Write(x, sizeof(*x));};
-			bool WritePropertyID (property_id_t *x) {return Write(x, sizeof(*x));};
+			bool WriteString    (char          *x){return Write(x);};
+			bool WriteCommand   (command_t      x){return Write((uint8_t *)(&x), sizeof(x));};
+			bool WriteCommand   (command_t     *x){return Write((uint8_t *)x,    sizeof(*x));};
+			bool WriteState     (status_t       x){return Write((uint8_t *)(&x), sizeof(x));};
+			bool WriteType      (type_t         x){return Write((uint8_t *)(&x), sizeof(x));};
+			bool WriteType      (type_t        *x){return Write((uint8_t *)x,    sizeof(*x));};
+			bool WriteInt       (int           *x){return Write((uint8_t *)x,    sizeof(*x));};
+			bool WriteActionID  (action_id_t   *x){return Write((uint8_t *)x,    sizeof(*x));};
+			bool WriteEventID   (event_id_t    *x){return Write((uint8_t *)x,    sizeof(*x));};
+			bool WritePropertyID(property_id_t *x){return Write((uint8_t *)x,    sizeof(*x));};
 			
 			status_t GetState(void);
 			void SetState(status_t val);
@@ -152,13 +241,13 @@ namespace SHETSource {
 			 *         this action. You will need to keep this refrence in order to
 			 *         remove the action using RemoveAction.
 			 */
-			LocalAction *AddAction(static char *address, void (*callback)(void));
+			LocalAction *AddAction(char *address, void (*callback)(void));
 			/** Overloaded: See documented version. */
-			LocalAction *AddAction(static char *address, int  (*callback)(void));
+			LocalAction *AddAction(char *address, int  (*callback)(void));
 			/** Overloaded: See documented version. */
-			LocalAction *AddAction(static char *address, void (*callback)(int arg));
+			LocalAction *AddAction(char *address, void (*callback)(int arg));
 			/** Overloaded: See documented version. */
-			LocalAction *AddAction(static char *address, int  (*callback)(int arg));
+			LocalAction *AddAction(char *address, int  (*callback)(int arg));
 			
 			/**
 			 * Unregister an action with the server.
@@ -183,7 +272,7 @@ namespace SHETSource {
 			 *         remove the event using RemoveEvent. This object can be called
 			 *         in order to raise the event.
 			 */
-			LocalEvent *AddEvent(static char *address);
+			LocalEvent *AddEvent(char *address);
 			
 			/**
 			 * Unregister an event on the server.
@@ -211,7 +300,7 @@ namespace SHETSource {
 			 *         this property. You will need to keep this refrence in order to
 			 *         remove the property using RemoveProperty.
 			 */
-			 LocalProperty *AddProperty(static char *address,
+			 LocalProperty *AddProperty(char *address,
 			                           void (*set_callback)(int value),
 			                           int  (*get_callback)(void));
 			/**
@@ -229,7 +318,7 @@ namespace SHETSource {
 			 *         this property. You will need to keep this refrence in order to
 			 *         remove the property using RemoveProperty.
 			 */
-			 LocalProperty *AddProperty(static char *address, int *var);
+			 LocalProperty *AddProperty(char *address, int *var);
 			
 			/**
 			 * Unregister a property on the server.
@@ -239,79 +328,6 @@ namespace SHETSource {
 			 */
 			void RemoveProperty(LocalProperty *property);
 	};
-	
-	
-	
-	template <class id_t>
-	class Local {
-		protected:
-			Client *client;
-			char   *address;
-			id_t    id;
-		
-		public:
-			void Init(Client *client, id_t id);
-			bool InUse(void);
-	};
-	
-	
-	
-	class LocalAction : public Local<action_id_t> {
-		protected:
-			void (*callback_vv)(void);
-			void (*callback_vi)(int value);
-			int  (*callback_iv)(void);
-			int  (*callback_ii)(int value);
-		
-		public:
-			void Add(static char *address, void (*callback)(void));
-			void Add(static char *address, void (*callback)(int value));
-			void Add(static char *address, int  (*callback)(void));
-			void Add(static char *address, int  (*callback)(int value));
-			void Remove(void);
-			
-			void Register(void);
-			void Unregister(void);
-			
-			void operator () (void);
-	};
-	
-	
-	
-	class LocalEvent : public Local<event_id_t> {
-		public:
-			void Add(static char *address, type_t type);
-			void Remove(void);
-			
-			void Register(void);
-			void Unregister(void);
-			
-			void operator () (void);
-			void operator () (int);
-	};
-	
-	
-	
-	class LocalProperty : public Local<property_id_t> {
-		protected:
-			int   *var;
-			void (*set_callback)(int value);
-			int  (*get_callback)(void);
-		
-		public:
-			void Add(static char *address,
-			         void (*set_callback)(int value),
-			         int  (*get_callback)(void));
-			void Add(static char *address, int *var);
-			void Remove(void);
-			
-			void Register(void);
-			void Unregister(void);
-			
-			void Set(void);
-			void Get(void);
-	};
-	
 }
 
 #endif

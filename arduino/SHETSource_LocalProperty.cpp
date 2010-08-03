@@ -1,12 +1,13 @@
 #include "WProgram.h"
-#include "Comms.h"
+#include "pins.h"
+#include "comms.h"
 #include "SHETSource.h"
 
 using namespace SHETSource;
 
 
 void
-LocalProperty::Add(static char *address,
+LocalProperty::Add(char *address,
                    void (*set_callback)(int value),
                    int  (*get_callback)(void))
 {
@@ -18,7 +19,7 @@ LocalProperty::Add(static char *address,
 
 
 void
-LocalProperty::Add(static char *address, int *var)
+LocalProperty::Add(char *address, int *var)
 {
 	this->address = address;
 	this->get_callback = NULL;
@@ -28,7 +29,7 @@ LocalProperty::Add(static char *address, int *var)
 
 
 void
-LocalProperty::Set(Client *client)
+LocalProperty::Set(void)
 {
 	if (address == NULL) {
 		client->ORState(STATUS_MALFORMED_COMMAND);

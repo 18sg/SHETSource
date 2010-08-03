@@ -60,7 +60,7 @@ class MultiplePins : public DirectPins
 		MultiplePins(uint8_t first_pin, uint8_t step, uint8_t num_channels,
 		             uint8_t read_pin_offset, uint8_t write_pin_offset);
 		
-		virtual void setup(void);
+		virtual void Setup(void);
 		
 		virtual void SetChannel(uint8_t channel);
 };

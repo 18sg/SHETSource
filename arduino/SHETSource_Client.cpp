@@ -1,5 +1,6 @@
 #include "WProgram.h"
-#include "Comms.h"
+#include "pins.h"
+#include "comms.h"
 #include "SHETSource.h"
 
 using namespace SHETSource;
@@ -11,16 +12,21 @@ address(address)
 {
 	action_id_t a;
 	for (a = 0; a < NUM_ACTIONS; a++)
-		actions[a]->Init(this, id);
+		actions[a].Init(this, a);
 	
 	event_id_t e;
 	for (e = 0; e < NUM_EVENTS; e++)
-		events[e]->Init(this, id);
+		events[e].Init(this, e);
 	
 	property_id_t p;
 	for (p = 0; p < NUM_PROPERTIES; p++)
-		properties[p]->Init(this, id);
-	
+		properties[p].Init(this, p);
+}
+
+
+void
+Client::Init(void)
+{
 	status_led = 13;
 	pinMode(status_led, OUTPUT);
 }
@@ -42,10 +48,10 @@ Client::DoSHET(void)
 void
 Client::MainLoop(void)
 {
-	HandleRequest();
-	
 	if (GetState() & STATUS_RESETTING) {
 		InitialiseWithServer();
+	} else {
+		HandleRequests();
 	}
 	
 	UpdateStatusLED();
@@ -55,17 +61,17 @@ Client::MainLoop(void)
 void
 Client::HandleRequests(void)
 {
-	if (comms->available()) {
+	if (comms->Available()) {
 		
 		command_t command;
 		if (!ReadCommand(&command)) return;
 		
 		switch (command) {
-			case COMMAND_RESET           : OnRcvReset(void);          break;
-			case COMMAND_PING            : OnRcvPing(void);           break;
-			case COMMAND_CALL_ACTION     : OnRcvCallAction(void);     break;
-			case COMMAND_SET_PROPERTY    : OnRcvSetProperty(void);    break;
-			case COMMAND_GET_PROPERTY    : OnRcvGetProperty(void);    break;
+			case COMMAND_RESET        : OnRcvReset();       break;
+			case COMMAND_PING         : OnRcvPing();        break;
+			case COMMAND_CALL_ACTION  : OnRcvCallAction();  break;
+			case COMMAND_SET_PROPERTY : OnRcvSetProperty(); break;
+			case COMMAND_GET_PROPERTY : OnRcvGetProperty(); break;
 			
 			default:
 				ORState(STATUS_MALFORMED_COMMAND);
@@ -79,7 +85,7 @@ void
 Client::InitialiseWithServer(void)
 {
 	/* If the remote end is trying to write then we can't send a reset. */
-	if (!comms->available()) {
+	if (!comms->Available()) {
 		// Send a reset
 		WriteCommand(COMMAND_RESET);
 		WriteString(address);
@@ -87,15 +93,15 @@ Client::InitialiseWithServer(void)
 		// Send registration commands
 		action_id_t a;
 		for (a = 0; a < NUM_ACTIONS; a++)
-			actions[a]->Register();
+			actions[a].Register();
 		
 		event_id_t e;
 		for (e = 0; e < NUM_EVENTS; e++)
-			events[e]->Register();
+			events[e].Register();
 		
 		property_id_t p;
 		for (p = 0; p < NUM_PROPERTIES; p++)
-			properties[p]->Register();
+			properties[p].Register();
 		
 		// Everything is working again now, reset the status bitfield
 		SetState(STATUS_CONNECTED);
@@ -152,7 +158,7 @@ Client::GetNextActionID(void)
 {
 	action_id_t i;
 	for (i = 0; i < NUM_ACTIONS; i++)
-		if (!actions[i]->InUse())
+		if (!actions[i].InUse())
 			return i;
 	
 	return -1;
@@ -164,7 +170,7 @@ Client::GetNextEventID(void)
 {
 	event_id_t i;
 	for (i = 0; i < NUM_EVENTS; i++)
-		if (!events[i]->InUse())
+		if (!events[i].InUse())
 			return i;
 	
 	return -1;
@@ -176,7 +182,7 @@ Client::GetNextPropertyID(void)
 {
 	property_id_t i;
 	for (i = 0; i < NUM_PROPERTIES; i++)
-		if (!properties[i]->InUse())
+		if (!properties[i].InUse())
 			return i;
 	
 	return -1;
@@ -187,7 +193,7 @@ Client::GetNextPropertyID(void)
 
 
 LocalAction *
-Client::AddAction(static char *address, void (*callback)(void))
+Client::AddAction(char *address, void (*callback)(void))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -199,7 +205,7 @@ Client::AddAction(static char *address, void (*callback)(void))
 
 
 LocalAction *
-Client::AddAction(static char *address, void (*callback)(int value))
+Client::AddAction(char *address, void (*callback)(int value))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -211,7 +217,7 @@ Client::AddAction(static char *address, void (*callback)(int value))
 
 
 LocalAction *
-Client::AddAction(static char *address, int (*callback)(void))
+Client::AddAction(char *address, int (*callback)(void))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -223,7 +229,7 @@ Client::AddAction(static char *address, int (*callback)(void))
 
 
 LocalAction *
-Client::AddAction(static char *address, int (*callback)(int value))
+Client::AddAction(char *address, int (*callback)(int value))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -244,7 +250,7 @@ Client::RemoveAction(LocalAction *action)
 
 
 LocalEvent *
-Client::AddEvent(static char *address)
+Client::AddEvent(char *address)
 {
 	event_id_t id = GetNextEventID();
 	ASSERT(id > 0);
@@ -266,16 +272,16 @@ Client::RemoveEvent(LocalEvent *event)
 
 
 LocalProperty *
-Client::AddProperty(static char *address,
+Client::AddProperty(char *address,
                     void (*set_callback)(int value),
                     int  (*get_callback)(void))
 {
 	property_id_t id = GetNextPropertyID();
 	ASSERT(id > 0);
 	
-	properties[id].Add(address, get_callback, set_callback);
+	properties[id].Add(address, set_callback, get_callback);
 	
-	return &(events[id]);
+	return &(properties[id]);
 }
 
 
