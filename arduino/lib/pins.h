@@ -14,7 +14,7 @@ class Pins
 		virtual uint8_t Read(void) = 0;
 		
 		/** Setup pin modes etc. ready for use */
-		virtual void Setup(void) = 0;
+		virtual void Init(void) = 0;
 };
 
 
@@ -43,7 +43,7 @@ class DirectPins : public Pins
 			return digitalRead(read_pin);
 		}
 		
-		virtual void Setup(void);
+		virtual void Init(void);
 };
 
 
@@ -60,7 +60,7 @@ class MultiplePins : public DirectPins
 		MultiplePins(uint8_t first_pin, uint8_t step, uint8_t num_channels,
 		             uint8_t read_pin_offset, uint8_t write_pin_offset);
 		
-		virtual void Setup(void);
+		virtual void Init(void);
 		
 		virtual void SetChannel(uint8_t channel);
 };
