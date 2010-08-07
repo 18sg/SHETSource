@@ -10,36 +10,29 @@ class CommandRecv(object):
 	
 	@state
 	def start(self, d):
+		return self.get_params(self.serial.start)(d)
+		
+
+class CommandSend(object):
+	
+	def send(self):
+		# call send_data here
 		pass
+	
+	def send_data(self, data):
+		
 
+class Reset(CommandRecv):
+	
+	@state
+	@_types.serialize
+	def get_params(self):
+		self.id = (yield _types.StringNull)
 
-
-# class MakeEvent(CommandRecv):
-# 	
-# 	@state
-# 	def start(self, d):
-# 		return _types.Int(self.read_id).start(d)
-# 	
-# 	def read_id(self, id):
-# 		self.id = id
-# 		return _types.StringNull(self.read_name).start
-# 	
-# 	def read_name(self, name):
-# 		self.name = name
-# 		return _types.TypeType(self.read_type)
-# 	
-# 	def read_type(self, type):
-# 		self.type = type
-# 		#self.shet.add_event(self.name, self.type)
-# 		return self.serial.start
 
 
 class MakeEvent(CommandRecv):
 	
-	@state
-	def start(self, d):
-		return self.get_params(self.serial.start)(d)
-		
 	@state
 	@_types.serialize
 	def get_params(self):
