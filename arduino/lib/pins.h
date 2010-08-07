@@ -8,13 +8,13 @@ class Pins
 {
 	public:
 		/** Set the output pin's level. */
-		virtual void write(uint8_t value) = 0;
+		virtual void Write(uint8_t value) = 0;
 		
 		/** Read the level on the input pin. */
-		virtual uint8_t read(void) = 0;
+		virtual uint8_t Read(void) = 0;
 		
 		/** Setup pin modes etc. ready for use */
-		virtual void setup(void) = 0;
+		virtual void Init(void) = 0;
 };
 
 
@@ -32,18 +32,18 @@ class DirectPins : public Pins
 		DirectPins(uint8_t read_pin, uint8_t write_pin);
 		
 		inline virtual void
-		write(uint8_t value)
+		Write(uint8_t value)
 		{
 			digitalWrite(write_pin, value);
 		}
 		
 		inline virtual
-		uint8_t read(void)
+		uint8_t Read(void)
 		{
 			return digitalRead(read_pin);
 		}
 		
-		virtual void setup(void);
+		virtual void Init(void);
 };
 
 
@@ -60,9 +60,9 @@ class MultiplePins : public DirectPins
 		MultiplePins(uint8_t first_pin, uint8_t step, uint8_t num_channels,
 		             uint8_t read_pin_offset, uint8_t write_pin_offset);
 		
-		virtual void setup(void);
+		virtual void Init(void);
 		
-		virtual void set_channel(uint8_t channel);
+		virtual void SetChannel(uint8_t channel);
 };
 
 #endif

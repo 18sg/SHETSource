@@ -8,7 +8,7 @@ DirectPins::DirectPins(uint8_t new_read_pin, uint8_t new_write_pin)
 }
 
 void
-DirectPins::setup()
+DirectPins::Init()
 {
 	// Set up the reading pin and activate the pullup
 	pinMode(read_pin, INPUT);
@@ -35,18 +35,18 @@ DirectPins::DirectPins(0, 0)
 }
 
 void
-MultiplePins::set_channel(uint8_t channel)
+MultiplePins::SetChannel(uint8_t channel)
 {
 	read_pin = first_pin + (step*channel) + read_pin_offset;
 	write_pin = first_pin + (step*channel) + write_pin_offset;
 }
 
 void
-MultiplePins::setup()
+MultiplePins::Init()
 {
 	uint8_t channel;
 	for (channel = 0; channel < num_channels; channel++) {
-		set_channel(channel);
-		DirectPins::setup();
+		SetChannel(channel);
+		DirectPins::Init();
 	}
 }
