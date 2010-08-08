@@ -51,7 +51,7 @@ def state(f):
 			# A generator was returned
 			generator = ret_val
 			
-			def sub_fsm_end_state(value):
+			def sub_fsm_end_state(value = None):
 				"""
 				Called at the end of a sub-fsm
 				"""
