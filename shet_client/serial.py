@@ -2,10 +2,10 @@ from twisted.internet.serialport import SerialPort
 
 from twisted.internet.protocol import Protocol
 
-from fsm import Fsm, state
+from fsm import FSM, state
 import commands
 
-class SerialProtocol(Protocol, Fsm):
+class SerialProtocol(Protocol, FSM):
 	
 	@state
 	def start(self, d):
@@ -28,7 +28,7 @@ class SerialProtocol(Protocol, Fsm):
 	
 	
 	def __init__(self, address, port=11357):
-		Fsm.__init__(self)
+		FSM.__init__(self)
 		self.clients = []
 	
 	

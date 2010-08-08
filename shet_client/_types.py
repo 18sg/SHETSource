@@ -8,6 +8,17 @@ class TypeReader(FSM):
 
 
 
+class CommandReader(Type):
+	"""
+	An FSM that reads a command ID and returns it.
+	"""
+	
+	@state
+	def start(self, d):
+		return self.end_state_callback(ord(d))
+
+
+
 class TypeTypeReader(Type):
 	"""
 	An FSM that reads a type ID and returns the appropriate FSM for reading that

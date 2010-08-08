@@ -2,8 +2,8 @@ from shet.client import ShetClient
 from twisted.internet import reactor
 from twisted.internet import defer
 
-from twisted.internet.serialport import SerialPort
 from twisted.internet.protocol import Protocol
+from twisted.internet.serialport import SerialPort
 
 
 class ArduinoTest(Protocol):
@@ -13,6 +13,8 @@ class ArduinoTest(Protocol):
 	def __init__(self, shet):
 		#Protocol.__init__(self)
 		self.shet = shet
+		print self.transport
+		print dir(self.transport)
 	
 	
 	def dataReceived(self, data):
@@ -39,6 +41,12 @@ class TestShetClient(ShetClient):
 		
 		# standard shet stuff.
 		self.event = self.add_event("test")
+		
+		self.action = self.add_action("act", self.on_act)
+	
+	
+	def on_act(self, *args):
+		print "act!"
 
 
 def main():

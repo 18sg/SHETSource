@@ -9,8 +9,13 @@ class CommandRecv(object):
 		self.shet = shet
 	
 	@state
-	def start(self, d):
-		return self.get_params(self.serial.start)(d)
+	def start(self, *args, **kwargs):
+		# The real state is the first state of the get_params 'sub
+		# FSM' which when finished will continue executing from
+		# the start state of the serial state machine. Because
+		# this function is essentially an alias, just "pass on"
+		# the call to the state.
+		return self.get_params(self.serial.start)(*args, **kwargs)
 		
 
 class CommandSend(object):
@@ -25,7 +30,7 @@ class CommandSend(object):
 class Reset(CommandRecv):
 	
 	@state
-	@_types.serialize
+	@_types.sub_fsm
 	def get_params(self):
 		self.id = (yield _types.StringNull)
 
@@ -34,7 +39,7 @@ class Reset(CommandRecv):
 class MakeEvent(CommandRecv):
 	
 	@state
-	@_types.serialize
+	@_types.sub_fsm
 	def get_params(self):
 		self.id = (yield _types.Int)
 		
