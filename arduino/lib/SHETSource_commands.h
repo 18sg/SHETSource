@@ -1,6 +1,8 @@
 #ifndef SHET_SOURCE_COMMANDS_H
 #define SHET_SOURCE_COMMANDS_H
 
+typedef uint8_t command_t;
+
 typedef enum _command_t {
 	/**
 	 * Slave -> Master:
@@ -25,7 +27,7 @@ typedef enum _command_t {
 	 *   connected/responding. The clients response should be 8-bits which equal 0
 	 *   if the device is in a normal state and otherwise if not.
 	 *
-	 *   If a slave doesn't received a ping or other communication for a certain
+	 *   If a slave doesn't receive a ping or other communication for a certain
 	 *   amount of time it assumes it has been disconnected.
 	 *
 	 *   Responses:
@@ -122,6 +124,7 @@ typedef enum _command_t {
 	 *   the action requested is invalid then the slave will ignore it silently.
 	 *
 	 *   Arguments:
+	 *     int   The ID of the action
 	 *     ?     Any data of the type that was specified during registration.
 	 *   Responses:
 	 *     ?     Any data of the type that was specified during registration.
@@ -135,6 +138,7 @@ typedef enum _command_t {
 	 *   requested is invalid then the slave will ignore it silently.
 	 *
 	 *   Arguments:
+	 *     int   The property id
 	 *     ?     Data of the type that was specified during registration.
 	 */
 	COMMAND_SET_PROPERTY    = 0x0b,
@@ -146,7 +150,7 @@ typedef enum _command_t {
 	 *   requested is invalid then the slave will ignore it silently.
 	 *
 	 *   Responses:
-	 *     ?     Data of the type that was specified during registration.
+	 *     int   The property id
 	 */
 	COMMAND_GET_PROPERTY    = 0x0c,
 	
@@ -161,6 +165,6 @@ typedef enum _command_t {
 	 */
 	COMMAND_RETURN          = 0x0d,
 	
-} command_t;
+};
 
 #endif

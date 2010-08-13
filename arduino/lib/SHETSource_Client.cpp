@@ -21,6 +21,8 @@ address(address)
 	property_id_t p;
 	for (p = 0; p < NUM_PROPERTIES; p++)
 		properties[p].Init(this, p);
+	
+	SetState(STATUS_RESETTING);
 }
 
 
@@ -280,6 +282,19 @@ Client::AddProperty(char *address,
 	ASSERT(id > 0);
 	
 	properties[id].Add(address, set_callback, get_callback);
+	
+	return &(properties[id]);
+}
+
+LocalProperty *
+Client::AddProperty(char *address,
+                    int  *var)
+{
+	property_id_t id = GetNextPropertyID();
+	ASSERT(id > 0);
+	ASSERT(var != NULL);
+	
+	properties[id].Add(address, var);
 	
 	return &(properties[id]);
 }

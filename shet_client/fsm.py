@@ -22,7 +22,7 @@ class FSM(object):
 		for char in string:
 			# Execute this state
 			next_state = self.state(char)
-			self.state = next_state
+			self.state = next_state if next_state is not None else self.state
 
 
 def state(f):
@@ -44,8 +44,10 @@ def state(f):
 		ret_val = f(self, *args, **kwargs)
 		
 		if ret_val is None:
-			# Nothing was returned so the next state is just the same
-			return types.MethodType(f, self, self.__class__)
+			# Nothing was returned so the next state is just the same. The action of
+			# returning the right state function is left to the process method as the
+			# function refrence 'f' will not be wrapped in this property.
+			return
 			
 		elif hasattr(ret_val, "next") and hasattr(ret_val, "send"):
 			# A generator was returned
@@ -75,8 +77,11 @@ def state(f):
 			
 			# Fetch the first sub-fsm from the generator and run it with the
 			# sub_fsm_end_state wrapper as the end state.
-			next_sub_fsm_class = generator.next()
-			return next_sub_fsm_class(sub_fsm_end_state).initial_state
+			try:
+				next_sub_fsm_class = generator.next()
+				return next_sub_fsm_class(sub_fsm_end_state).initial_state
+			except StopIteration:
+				return self.end_state_callback()
 			
 		else:
 			# The type returned is (assumed to be) a state

@@ -11,3 +11,4 @@ class Commands:
 	COMMAND_CALL_ACTION     = 0x0a
 	COMMAND_SET_PROPERTY    = 0x0b
 	COMMAND_GET_PROPERTY    = 0x0c
+	COMMAND_RETURN          = 0x0d

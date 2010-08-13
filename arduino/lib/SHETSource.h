@@ -202,7 +202,7 @@ namespace SHETSource {
 			 */
 			bool Write(char *str);
 			
-			bool ReadCommand    (command_t     *x){return Read ((uint8_t *)x, sizeof(*x));};
+			bool ReadCommand    (uint8_t       *x){return Read ((uint8_t *)x, sizeof(*x));};
 			bool ReadInt        (int           *x){return Read ((uint8_t *)x, sizeof(*x));};
 			bool ReadActionID   (action_id_t   *x){return Read ((uint8_t *)x, sizeof(*x));};
 			bool ReadEventID    (event_id_t    *x){return Read ((uint8_t *)x, sizeof(*x));};

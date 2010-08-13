@@ -50,16 +50,17 @@ LocalProperty::Set(void)
 void
 LocalProperty::Get(void)
 {
-	if (address == NULL) {
+	if (address == NULL && var == NULL) {
 		client->ORState(STATUS_MALFORMED_COMMAND);
 		return;
 	}
 	int new_var;
+	client->WriteCommand(COMMAND_RETURN);
 	if (set_callback != NULL) {
 		new_var = get_callback();
 		client->WriteInt(&new_var);
 	} else if (var != NULL) {
-		client->ReadInt(var);
+		client->WriteInt(var);
 	} else {
 		/* Shouldn't get here (tm) */
 	}
