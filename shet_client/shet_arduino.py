@@ -20,6 +20,8 @@ class ArduinoShetClient(ShetClient, FSM):
 		"""
 		self.writer = writer
 		
+		self.awaiting_reset = True
+		
 		# The address that all events etc. appear beneath.
 		self.base_address = None
 		
@@ -43,6 +45,9 @@ class ArduinoShetClient(ShetClient, FSM):
 		self.base_address = base_address
 		
 		self.unregister_all()
+		
+		self.awaiting_reset = False
+		print "!!!!Register!!!!", repr(base_address)
 	
 	
 	def unregister_all(self):
@@ -56,7 +61,6 @@ class ArduinoShetClient(ShetClient, FSM):
 		
 		self.deferred_returns = []
 		
-		# Request to the gateway for this client be reset
 		# XXX: This should be replaced with something to automagically tell the SHET
 		# Server to forget everything.
 		if self.client is not None:
@@ -83,15 +87,35 @@ class ArduinoShetClient(ShetClient, FSM):
 		self.writer.write(data)
 	
 	
+	def reset_device(self):
+		# Disconnect from SHET
+		self.unregister_all()
+		
+		# Reset the device
+		if not self.awaiting_reset:
+			data = _types.Command().encode(Commands.COMMAND_RESET)
+			self.writer.write(data)
+			
+			self.awaiting_reset = True
+		
+		# Reset the FSM
+		self.state = self.process_command
+		
+	
+	
 	@state
 	def process_command(self, command):
 		command = ord(command)
-		
 		if command == Commands.COMMAND_RESET:
 			self.reset((yield _types.StringNull))
 			return
+		elif self.awaiting_reset:
+			self.reset_device()
+			return
 		
-		elif command == Commands.COMMAND_RETURN:
+		
+		
+		if command == Commands.COMMAND_RETURN:
 			d = self.deferred_returns.pop(0)
 			d.callback((yield d.return_type) if d.return_type is not _types.Void
 			            else None)
@@ -168,6 +192,8 @@ class ArduinoShetClient(ShetClient, FSM):
 				self.registered_events[event_id](value)
 			else:
 				self.registered_events[event_id]()
+		else:
+			self.reset_device()
 	
 	
 	initial_state = process_command

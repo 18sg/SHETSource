@@ -87,27 +87,35 @@ void
 Client::InitialiseWithServer(void)
 {
 	/* If the remote end is trying to write then we can't send a reset. */
-	if (!comms->Available()) {
-		// Send a reset
-		WriteCommand(COMMAND_RESET);
-		WriteString(address);
-		
-		// Send registration commands
-		action_id_t a;
-		for (a = 0; a < NUM_ACTIONS; a++)
-			actions[a].Register();
-		
-		event_id_t e;
-		for (e = 0; e < NUM_EVENTS; e++)
-			events[e].Register();
-		
-		property_id_t p;
-		for (p = 0; p < NUM_PROPERTIES; p++)
-			properties[p].Register();
-		
-		// Everything is working again now, reset the status bitfield
-		SetState(STATUS_CONNECTED);
+	digitalWrite(status_led, LOW);
+	while (comms->Available()) {
+		while (comms->Available()) {
+			// Flush the waiting read data
+			comms->Read();
+			delay(1);
+		}
+		delay(100);
 	}
+	
+	// Send a reset
+	WriteCommand(COMMAND_RESET);
+	WriteString(address);
+	
+	// Send registration commands
+	action_id_t a;
+	for (a = 0; a < NUM_ACTIONS; a++)
+		actions[a].Register();
+	
+	event_id_t e;
+	for (e = 0; e < NUM_EVENTS; e++)
+		events[e].Register();
+	
+	property_id_t p;
+	for (p = 0; p < NUM_PROPERTIES; p++)
+		properties[p].Register();
+	
+	// Everything is working again now, reset the status bitfield
+	SetState(STATUS_CONNECTED);
 }
 
 
