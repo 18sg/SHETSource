@@ -6,6 +6,7 @@
 #define NUM_ACTIONS    10
 #define NUM_EVENTS     10
 #define NUM_PROPERTIES 10
+#define PING_INTERVAL  5000
 
 
 namespace SHETSource {
@@ -161,6 +162,8 @@ namespace SHETSource {
 			void OnRcvCallAction(void);
 			void OnRcvSetProperty(void);
 			void OnRcvGetProperty(void);
+			
+			long int last_ping;
 		
 		
 		public:
@@ -211,7 +214,6 @@ namespace SHETSource {
 			bool WriteString    (char          *x){return Write(x);};
 			bool WriteCommand   (command_t      x){return Write((uint8_t *)(&x), sizeof(x));};
 			bool WriteCommand   (command_t     *x){return Write((uint8_t *)x,    sizeof(*x));};
-			bool WriteState     (status_t       x){return Write((uint8_t *)(&x), sizeof(x));};
 			bool WriteType      (type_t         x){return Write((uint8_t *)(&x), sizeof(x));};
 			bool WriteType      (type_t        *x){return Write((uint8_t *)x,    sizeof(*x));};
 			bool WriteInt       (int           *x){return Write((uint8_t *)x,    sizeof(*x));};

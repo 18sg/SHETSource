@@ -31,6 +31,7 @@ Client::Init(void)
 {
 	status_led = 13;
 	pinMode(status_led, OUTPUT);
+	last_ping = millis();
 }
 
 
@@ -56,6 +57,11 @@ Client::MainLoop(void)
 		HandleRequests();
 	}
 	
+	if (millis() - last_ping > PING_INTERVAL) {
+		WriteCommand(COMMAND_PING);
+		last_ping = millis();
+	}
+	
 	UpdateStatusLED();
 }
 
@@ -64,6 +70,7 @@ void
 Client::HandleRequests(void)
 {
 	if (comms->Available()) {
+		last_ping = millis();
 		
 		command_t command;
 		if (!ReadCommand(&command)) return;
@@ -116,6 +123,7 @@ Client::InitialiseWithServer(void)
 	
 	// Everything is working again now, reset the status bitfield
 	SetState(STATUS_CONNECTED);
+	last_ping = millis();
 }
 
 

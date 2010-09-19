@@ -16,7 +16,9 @@ Client::OnRcvReset(void)
 void
 Client::OnRcvPing(void)
 {
-	WriteState(GetState());
+	int state = GetState();
+	WriteCommand(COMMAND_RETURN);
+	WriteInt(&state);
 }
 
 

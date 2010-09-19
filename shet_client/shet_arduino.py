@@ -1,3 +1,5 @@
+# XXX: Massive refactoring needed: a quick hack-job
+
 from command_nos import Commands
 
 from fsm import FSM, state
@@ -6,7 +8,18 @@ from shet.client import ShetClient
 from twisted.internet import reactor
 from twisted.internet import defer
 
+from twisted.internet.error import AlreadyCancelled
+from twisted.internet.error import AlreadyCalled
+
 import _types
+
+
+# Number of inactive seconds to wait before sending a ping to a device
+NO_READ_PING_TIMEOUT = 6
+
+# Timeout for a ping command to return
+PING_TIMEOUT = 1
+
 
 class ArduinoShetClient(ShetClient, FSM):
 	"""
@@ -20,10 +33,15 @@ class ArduinoShetClient(ShetClient, FSM):
 		"""
 		self.writer = writer
 		
+		# Are we waiting for the device to send a reset
 		self.awaiting_reset = True
+		self.reset_sent = True
 		
 		# The address that all events etc. appear beneath.
 		self.base_address = None
+		
+		self.ping_timer = None
+		self.ping_timeout = None
 		
 		self.registered_actions = {}
 		self.registered_events = {}
@@ -36,6 +54,39 @@ class ArduinoShetClient(ShetClient, FSM):
 		FSM.__init__(self)
 	
 	
+	def reset_ping_timer(self):
+		if self.ping_timeout is not None:
+			try:
+				self.ping_timeout.cancel()
+			except AlreadyCancelled:
+				pass
+			except AlreadyCalled:
+				pass
+		
+		if not self.awaiting_reset:
+			if self.ping_timer is not None:
+				try:
+					self.ping_timer.reset(NO_READ_PING_TIMEOUT)
+					return
+				except AlreadyCancelled:
+					pass
+			
+			self.ping_timer = reactor.callLater(NO_READ_PING_TIMEOUT, self.send_ping)
+	
+	
+	def send_ping(self):
+		self.ping_timer = None
+		
+		data = _types.Command().encode(Commands.COMMAND_PING)
+		self.writer.write(data)
+		
+		d = defer.Deferred()
+		d.return_type = _types.Int
+		self.deferred_returns.append(d)
+		
+		self.ping_timeout = reactor.callLater(PING_TIMEOUT, self.timeout_device)
+	
+	
 	"""
 	Reset the connection to the SHET server clearning all events etc. and
 	setting the base address for the client's events etc.
@@ -46,6 +97,9 @@ class ArduinoShetClient(ShetClient, FSM):
 		
 		self.unregister_all()
 		
+		self.reset_ping_timer()
+		
+		self.reset_sent = False
 		self.awaiting_reset = False
 		print "!!!!Register!!!!", repr(base_address)
 	
@@ -55,6 +109,8 @@ class ArduinoShetClient(ShetClient, FSM):
 		self.registered_actions = {}
 		self.registered_events = {}
 		self.registered_properties = {}
+		
+		ShetClient.reset(self)
 		
 		for deferred in self.deferred_returns:
 			deferred.errback(Exception("Arduino was reset."))
@@ -92,15 +148,21 @@ class ArduinoShetClient(ShetClient, FSM):
 		self.unregister_all()
 		
 		# Reset the device
-		if not self.awaiting_reset:
+		if not self.reset_sent:
 			data = _types.Command().encode(Commands.COMMAND_RESET)
 			self.writer.write(data)
 			
-			self.awaiting_reset = True
+			self.reset_sent = True
+		
+		self.awaiting_reset = True
 		
 		# Reset the FSM
 		self.state = self.process_command
-		
+	
+	
+	def timeout_device(self):
+		self.reset_device()
+		self.reset_sent = False
 	
 	
 	@state
@@ -117,9 +179,14 @@ class ArduinoShetClient(ShetClient, FSM):
 		
 		if command == Commands.COMMAND_RETURN:
 			d = self.deferred_returns.pop(0)
-			d.callback((yield d.return_type) if d.return_type is not _types.Void
-			            else None)
+			d.callback((yield d.return_type) if hasattr(d, "return_type")
+			                                    and d.return_type is not _types.Void
+			                                 else None)
 			return
+			
+		elif command == Commands.COMMAND_PING:
+			return
+			
 			
 		elif command == Commands.COMMAND_ADD_ACTION:
 			action_id = (yield _types.Int)
@@ -197,3 +264,8 @@ class ArduinoShetClient(ShetClient, FSM):
 	
 	
 	initial_state = process_command
+	
+	
+	def process(self, *args, **kwargs):
+		FSM.process(self, *args, **kwargs)
+		self.reset_ping_timer()
