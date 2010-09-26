@@ -3,7 +3,7 @@
 #include "comms.h"
 
 #define STATUS_LED 13
-#define NUM_CLIENTS 2
+#define NUM_CLIENTS 5
 #define SERIAL_SPEED 9600
 
 bool out_of_sync;

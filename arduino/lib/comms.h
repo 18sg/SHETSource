@@ -2,7 +2,7 @@
 #define COMMS_H
 
 #define COMMS_CLOCK_PERIOD 50
-#define TIMEOUT_CYCLES 2000
+#define TIMEOUT_CYCLES 10000
 
 
 class Comms;

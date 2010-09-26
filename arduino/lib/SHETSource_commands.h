@@ -8,9 +8,12 @@ typedef enum _command_t {
 	 * Slave -> Master:
 	 *   This device has been connected for the first time or is reconnecting
 	 *   after some error (e.g. communication error). If received then the device
-	 *   will proceed to register all events.
+	 *   will proceed to register all events. This command will be repeated a
+	 *   number of times and end with the inverse of the command ID before sending
+	 *   arguments.
 	 *
 	 *   Arguments:
+	 *     int   A unique (random) ID for this device session.
 	 *     \0    Relative address for this device (e.g. a name)
 	 *
 	 * Master -> Slave:
@@ -18,7 +21,7 @@ typedef enum _command_t {
 	 *   a communication error) yet has received a command from it other than a
 	 *   reset. When received the slave should immediately perform a reset.
 	 */
-	COMMAND_RESET           = 0x01,
+	COMMAND_RESET           = 0x00,
 	
 	
 	/**
@@ -27,11 +30,8 @@ typedef enum _command_t {
 	 *   connected/responding. The clients response should be 8-bits which equal 0
 	 *   if the device is in a normal state and otherwise if not.
 	 *
-	 *   If a slave doesn't receive a ping or other communication for a certain
-	 *   amount of time it assumes it has been disconnected.
-	 *
 	 *   Responses:
-	 *     byte  A bit-field, 0 if device is working normally, otherwise if not.
+	 *     int   A unique (random) ID for this device session.
 	 */
 	COMMAND_PING            = 0x02,
 	

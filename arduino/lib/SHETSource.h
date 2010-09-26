@@ -6,7 +6,10 @@
 #define NUM_ACTIONS    10
 #define NUM_EVENTS     10
 #define NUM_PROPERTIES 10
-#define PING_INTERVAL  5000
+#define PING_INTERVAL  2500
+
+/* Number of times to repeat the reset byte. */
+#define LENGTH_OF_RESET_COMMAND 10
 
 
 namespace SHETSource {
@@ -138,6 +141,8 @@ namespace SHETSource {
 			Comms *comms;
 			
 			char *address;
+			
+			int connection_id;
 			
 			status_t state;
 			

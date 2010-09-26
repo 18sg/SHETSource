@@ -57,8 +57,10 @@ Client::MainLoop(void)
 		HandleRequests();
 	}
 	
+	// Send a ping at a regular inverval
 	if (millis() - last_ping > PING_INTERVAL) {
 		WriteCommand(COMMAND_PING);
+		WriteInt(&connection_id);
 		last_ping = millis();
 	}
 	
@@ -70,7 +72,6 @@ void
 Client::HandleRequests(void)
 {
 	if (comms->Available()) {
-		last_ping = millis();
 		
 		command_t command;
 		if (!ReadCommand(&command)) return;
@@ -105,7 +106,16 @@ Client::InitialiseWithServer(void)
 	}
 	
 	// Send a reset
-	WriteCommand(COMMAND_RESET);
+	int i;
+	for (i = 0; i < LENGTH_OF_RESET_COMMAND; i++)
+		WriteCommand(COMMAND_RESET);
+	WriteCommand(COMMAND_RESET ^ 0xFF);
+	
+	// Generate/send the unique connection ID
+	randomSeed(analogRead(0) ^ ((int)micros()));
+	connection_id = random(0xFFFF);
+	WriteInt(&connection_id);
+	
 	WriteString(address);
 	
 	// Send registration commands
@@ -123,7 +133,6 @@ Client::InitialiseWithServer(void)
 	
 	// Everything is working again now, reset the status bitfield
 	SetState(STATUS_CONNECTED);
-	last_ping = millis();
 }
 
 
