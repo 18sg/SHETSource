@@ -73,7 +73,7 @@ class ClientFSM(FSM):
 		if deferred_return.return_type is not Void:
 			deferred_return.callback((yield deferred_return.return_type))
 		else:
-			deferred_return.callback()
+			deferred_return.callback(None)
 			return
 	
 	
