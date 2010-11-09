@@ -54,6 +54,7 @@ class Client(ClientSHET, ClientFSM, ClientSHETSource):
 	
 	def _on_connect(self):
 		# Setup a timer for inactivity
+		self.cancel_reset()
 		self._inactivity_timer = reactor.callLater(Client.INACTIVITY_TIMEOUT,
 		                                           self._on_inactivity_timeout)
 	
