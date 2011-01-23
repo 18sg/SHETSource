@@ -20,14 +20,18 @@ Comms::Available(void)
 inline void
 Comms::Clock(void)
 {
-	delayMicroseconds(COMMS_CLOCK_PERIOD);
+	unsigned long start = micros();
+	while (micros() - start < COMMS_CLOCK_PERIOD)
+		;
 }
 
 
 inline void
 Comms::HalfClock(void)
 {
-	delayMicroseconds(COMMS_CLOCK_PERIOD / 2);
+	unsigned long start = micros();
+	while (micros() - start < COMMS_CLOCK_PERIOD/2)
+		;
 }
 
 
