@@ -80,6 +80,8 @@ Comms::Write(uint8_t byte)
 	// Return the line to the idle state as an end bit
 	pins->Write(HIGH);
 	
+	clock();
+	
 	return true;
 }
 
@@ -140,7 +142,9 @@ Comms::Read()
 	if (!WaitTimeout(HIGH)) {
 		return -1;
 	}
-
+	
+	clock();
+	
 	return data;
 }
 
