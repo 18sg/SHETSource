@@ -1,8 +1,8 @@
 #ifndef COMMS_H
 #define COMMS_H
 
-#define COMMS_CLOCK_PERIOD 100
-#define TIMEOUT_CYCLES 10000
+#define COMMS_CLOCK_PERIOD 100ul
+#define TIMEOUT_CYCLES 10000ul
 
 
 class Comms;

@@ -40,10 +40,10 @@ Comms::WaitTimeout(uint8_t target_state)
 {
 	// Busy-loop until the remote device signals that it is ready or the timeout
 	// expires.
-	long time = 0;
+	unsigned long time = micros();
 	while (pins->Read() != target_state) {
 		time ++;
-		if (time >= TIMEOUT_CYCLES) {
+		if ((micros() - time) >= TIMEOUT_CYCLES) {
 			return false;
 		}
 	}

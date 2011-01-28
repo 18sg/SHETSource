@@ -4,7 +4,7 @@
 
 #define STATUS_LED 13
 #define NUM_CLIENTS 5
-#define SERIAL_SPEED 9600
+#define SERIAL_SPEED 115200
 
 bool out_of_sync;
 
