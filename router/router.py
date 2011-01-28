@@ -13,7 +13,7 @@ class Router(object):
 	def __init__(self, shet_server   = "localhost",
 	                   shet_port     = 11235,
 	                   gateway_port  = "/dev/ttyUSB0",
-	                   gateway_speed = 115200):
+	                   gateway_speed = 19200):
 		
 		self.shet = ShetClient()
 		self.shet.install(shet_server, shet_port)
