@@ -10,8 +10,8 @@ from gateway import Gateway
 
 class Router(object):
 	
-	def __init__(self, shet_server   = "localhost",
-	                   shet_port     = 11235,
+	def __init__(self, shet_server   = None,
+	                   shet_port     = None,
 	                   gateway_port  = "/dev/ttyUSB0",
 	                   gateway_speed = 115200):
 		
