@@ -2,3 +2,5 @@
 *.swp
 *.o
 *.pyc
+build-cli
+*.swo
