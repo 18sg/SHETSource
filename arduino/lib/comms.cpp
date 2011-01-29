@@ -2,8 +2,10 @@
 #include "pins.h"
 #include "comms.h"
 
-Comms::Comms(Pins *new_pins):
-pins(new_pins)
+Comms::Comms(Pins *new_pins)
+	: pins(new_pins)
+	, buffer_head(0)
+	, buffer_tail(0)
 {
 	// Set the output line to high (idle)
 	pins->Write(HIGH);
@@ -13,7 +15,7 @@ pins(new_pins)
 bool
 Comms::Available(void)
 {
-	return pins->Read() == LOW;
+	return (buffer_head != buffer_tail) || (pins->Read() == LOW);
 }
 
 
@@ -55,6 +57,16 @@ Comms::WaitTimeout(uint8_t target_state)
 bool
 Comms::Write(uint8_t byte)
 {
+	// Is the remote device already trying to write?
+	int bytes_read = 0;
+	while (pins->Read() == LOW) {
+		if (!ReadToBuffer())
+			return false;
+		if (++bytes_read >= MAX_PRE_WRITE_READS)
+			return false;
+	}
+	
+	
 	// Signal that we're waiting to write
 	pins->Write(LOW);
 	
@@ -116,9 +128,44 @@ Comms::Write(char *str)
 int
 Comms::Read()
 {
+	if (buffer_head != buffer_tail || ReadToBuffer()) {
+		// Read buffered value
+		if (buffer_head == buffer_tail) {
+			// Buffer empty!
+			return -1;
+		}
+		
+		int data = buffer[buffer_head];
+		buffer_head = (buffer_head + 1) % COMMS_BUFFER_SIZE;
+		return data;
+	}
+	return -1;
+}
+
+
+bool
+Comms::Read(uint8_t *buf, int len)
+{
+	int offset;
+	int data;
+	for (offset = 0; offset < len; offset ++) {
+		data = Read();
+		if (data != -1) {
+			*(buf + offset) = (uint8_t) data;
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+bool
+Comms::ReadToBuffer()
+{
 	// Wait until the remote device acknowledges or the timeout expires.
 	if (!WaitTimeout(LOW))
-		return -1;
+		return false;
 	
 	// Signal that this device is ready
 	pins->Write(LOW);
@@ -140,27 +187,23 @@ Comms::Read()
 	
 	// Wait until the remote device is finished sending...
 	if (!WaitTimeout(HIGH)) {
-		return -1;
+		return false;
 	}
+	
+	// Check buffer isn't too full
+	int new_buffer_tail = (buffer_tail + 1) % COMMS_BUFFER_SIZE;
+	if (new_buffer_tail == buffer_head) {
+		Clock();
+		Clock();
+		return false;
+	}
+	
+	// Store data in buffer
+	buffer[buffer_tail] = data;
+	buffer_tail = new_buffer_tail;
 	
 	Clock();
+	Clock();
 	
-	return data;
-}
-
-
-bool
-Comms::Read(uint8_t *buf, int len)
-{
-	int offset;
-	int data;
-	for (offset = 0; offset < len; offset ++) {
-		data = Read();
-		if (data != -1) {
-			*(buf + offset) = (uint8_t) data;
-		} else {
-			return false;
-		}
-	}
 	return true;
 }

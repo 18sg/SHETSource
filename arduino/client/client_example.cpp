@@ -4,13 +4,13 @@
 #include "SHETSource.h"
 
 
-DirectPins pins = DirectPins(14,15);
+DirectPins pins = DirectPins(2,3);
 Comms comms = Comms(&pins);
 
 /* All addresses from this arduino will be prefixed with the string given as the
  * argument below, don't forget the trailing slash if you want it to be a
  * subdirectory! */
-SHETSource::Client client = SHETSource::Client(&comms, "karl/arduino");
+SHETSource::Client client = SHETSource::Client(&comms, "testduino");
 
 SHETSource::LocalEvent *press_event;
 
