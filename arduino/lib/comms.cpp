@@ -93,6 +93,10 @@ Comms::Write(uint8_t byte)
 	pins->Write(HIGH);
 	
 	Clock();
+	Clock();
+	Clock();
+	Clock();
+	Clock();
 	
 	return true;
 }
@@ -193,17 +197,12 @@ Comms::ReadToBuffer()
 	// Check buffer isn't too full
 	int new_buffer_tail = (buffer_tail + 1) % COMMS_BUFFER_SIZE;
 	if (new_buffer_tail == buffer_head) {
-		Clock();
-		Clock();
 		return false;
 	}
 	
 	// Store data in buffer
 	buffer[buffer_tail] = data;
 	buffer_tail = new_buffer_tail;
-	
-	Clock();
-	Clock();
 	
 	return true;
 }
