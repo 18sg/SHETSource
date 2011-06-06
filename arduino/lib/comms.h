@@ -1,6 +1,9 @@
 #ifndef COMMS_H
 #define COMMS_H
 
+// define this to enable serial.
+// #define SERIAL_CONN
+
 #define COMMS_CLOCK_PERIOD 100ul
 #define TIMEOUT_CYCLES 500000ul
 #define COMMS_BUFFER_SIZE 64
@@ -11,7 +14,11 @@ class Comms;
 
 class Comms {
 	public:
+#ifndef SERIAL_CONN
 		Comms(Pins *new_pins);
+#else
+		Comms(long speed);
+#endif
 		
 		bool Write(uint8_t byte);
 		bool Write(uint8_t *buf, int len);
@@ -22,6 +29,7 @@ class Comms {
 		
 		bool Available(void);
 	
+#ifndef SERIAL_CONN
 	private:
 		Pins *pins;
 		void Clock(void);
@@ -34,6 +42,7 @@ class Comms {
 		uint8_t buffer[COMMS_BUFFER_SIZE];
 		
 		bool ReadToBuffer(void);
+#endif
 };
 
 #endif

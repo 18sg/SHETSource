@@ -59,7 +59,7 @@ class ClientFSM(FSM):
 				return
 		
 		self.connection_id = (yield Integer)
-		self.base_path     = self.router.path((yield String))
+		self.base_path     = (yield String)
 		self.connected     = True
 		print ("CONNECTED!"*80)[:80]
 	

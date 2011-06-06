@@ -18,14 +18,14 @@ class ClientSHET(object):
 	
 	def add_property(self, id, path, set_callback, get_callback):
 		if self.connected:
-			prop = self.router.shet.add_property(path, set_callback, get_callback)
+			prop = self.shet.add_property(path, set_callback, get_callback)
 			self._properties[id] = prop
 			return prop
 		else:
 			raise NotConnected()
 	def remove_property(self, prop_id):
 		try:
-			self.router.shet.remove_property(self._properties[prop_id])
+			self.shet.remove_property(self._properties[prop_id])
 		except Exception:
 			pass
 		finally:
@@ -34,14 +34,14 @@ class ClientSHET(object):
 	
 	def add_action(self, id, path, callback):
 		if self.connected:
-			action = self.router.shet.add_action(path, callback)
+			action = self.shet.add_action(path, callback)
 			self._actions[id] = action
 			return action
 		else:
 			raise NotConnected()
 	def remove_action(self, action_id):
 		try:
-			self.router.shet.remove_action(self._actions[action_id])
+			self.shet.remove_action(self._actions[action_id])
 		except Exception:
 			pass
 		finally:
@@ -50,14 +50,14 @@ class ClientSHET(object):
 	
 	def add_event(self, id, path):
 		if self.connected:
-			event = self.router.shet.add_event(path)
+			event = self.shet.add_event(path)
 			self._events[id] = event
 			return event
 		else:
 			raise NotConnected()
 	def remove_event(self, event_id):
 		try:
-			self.router.shet.remove_event(self._events[event_id])
+			self.shet.remove_event(self._events[event_id])
 		except Exception:
 			pass
 		finally:

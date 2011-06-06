@@ -2,6 +2,7 @@
 #include "pins.h"
 #include "comms.h"
 
+#ifndef SERIAL_CONN
 Comms::Comms(Pins *new_pins)
 	: pins(new_pins)
 	, buffer_head(0)
@@ -44,7 +45,7 @@ Comms::WaitTimeout(uint8_t target_state)
 	// expires.
 	unsigned long time = micros();
 	while (pins->Read() != target_state) {
-		time ++;
+		time ++; // XXX: LOLWUT???
 		if ((micros() - time) >= TIMEOUT_CYCLES) {
 			return false;
 		}
@@ -206,3 +207,68 @@ Comms::ReadToBuffer()
 	
 	return true;
 }
+
+#else
+Comms::Comms(long speed)
+{
+	Serial.begin(speed);
+}
+
+bool
+Comms::Write(uint8_t byte)
+{
+	Serial.write(byte);
+	return true;
+}
+
+bool
+Comms::Write(uint8_t *buf, int len)
+{
+	Serial.write(buf, len);
+	return true;
+}
+
+bool
+Comms::Write(char *str)
+{
+	Serial.write(str);
+	Serial.write((uint8_t)0);
+	return true;
+}
+
+int
+Comms::Read()
+{
+	// Wait for TIMEOUT_CYCLES micros, or until the serial is available.
+	unsigned long time = micros();
+	while (!Serial.available()) {
+		if (micros() - time >= TIMEOUT_CYCLES)
+			return -1;
+	}
+	
+	return Serial.read();
+}
+
+bool
+Comms::Read(uint8_t *buf, int len)
+{
+	int offset;
+	int data;
+	for (offset = 0; offset < len; offset ++) {
+		data = Read();
+		if (data != -1) {
+			*(buf + offset) = (uint8_t) data;
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool
+Comms::Available(void)
+{
+	return Serial.available();
+}
+
+#endif

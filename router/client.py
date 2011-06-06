@@ -2,6 +2,7 @@
 
 
 from twisted.internet import reactor
+from twisted.internet.protocol import Protocol
 
 from error import NotConnected
 
@@ -9,8 +10,10 @@ from clientfsm        import ClientFSM
 from clientshet       import ClientSHET
 from clientshetsource import ClientSHETSource
 
+import traceback
 
-class Client(ClientSHET, ClientFSM, ClientSHETSource):
+
+class Client(Protocol, ClientSHET, ClientFSM, ClientSHETSource):
 	
 	"""
 	The number of secconds where no reads occur while the device is connected
@@ -19,9 +22,8 @@ class Client(ClientSHET, ClientFSM, ClientSHETSource):
 	INACTIVITY_TIMEOUT = 6
 	
 	
-	def __init__(self, router, address):
-		self.router  = router
-		self.address = address
+	def __init__(self, shet):
+		self.shet  = shet
 		
 		ClientFSM.__init__(self)
 		ClientSHET.__init__(self)
@@ -78,18 +80,25 @@ class Client(ClientSHET, ClientFSM, ClientSHETSource):
 	
 	
 	def write(self, data):
-		"""Write some data to a client via the gateway."""
-		self.router.gateway.write(self.address, data)
+		"""Write some data to a client via the transport."""
+		print "Wrote ", repr(data)
+		self.transport.write(data)
 	
 	
-	def data_recieved(self, data):
+	def dataReceived(self, data):
 		"""Called when this client recieves some data from the gateway."""
+		print "Recieved ", repr(data)
 		self.reset_inactivity_timer()
 		try:
 			self.process(data)
 		except Exception, e:
 			self._on_malformed_command()
-			print e
+			traceback.print_exc()
+	
+	def connectionLost(self, reasn):
+		"""Called when the connection is lost."""
+		# XXX: This currently doesn't get called -- i think a bug in SerialPort.
+		self.connected = False
 	
 	
 	def reset_inactivity_timer(self):
