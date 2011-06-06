@@ -45,7 +45,6 @@ Comms::WaitTimeout(uint8_t target_state)
 	// expires.
 	unsigned long time = micros();
 	while (pins->Read() != target_state) {
-		time ++; // XXX: LOLWUT???
 		if ((micros() - time) >= TIMEOUT_CYCLES) {
 			return false;
 		}
