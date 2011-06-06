@@ -31,7 +31,7 @@ class GatewayIO(FSM):
 			encoded_data = (chr(client_address)
 			                + chr(0b11110000 | (ord(byte) & 0x0F))
 			                + chr(0b10110000 | ((ord(byte) & 0xF0) >> 4)))
-			self.transport.writeSomeData(encoded_data)
+			self.transport.write(encoded_data)
 	
 	
 	##############################################################################
