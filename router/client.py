@@ -81,13 +81,11 @@ class Client(Protocol, ClientSHET, ClientFSM, ClientSHETSource):
 	
 	def write(self, data):
 		"""Write some data to a client via the transport."""
-		print "Wrote ", repr(data)
 		self.transport.write(data)
 	
 	
 	def dataReceived(self, data):
 		"""Called when this client recieves some data from the gateway."""
-		print "Recieved ", repr(data)
 		self.reset_inactivity_timer()
 		try:
 			self.process(data)
