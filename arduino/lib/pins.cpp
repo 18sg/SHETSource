@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include <Arduino.h>
 #include "pins.h"
 
 DirectPins::DirectPins(uint8_t new_read_pin, uint8_t new_write_pin)
