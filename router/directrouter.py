@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 from twisted.internet import reactor
 from twisted.internet.serialport import SerialPort
