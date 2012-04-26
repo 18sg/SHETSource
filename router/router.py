@@ -10,7 +10,17 @@ from shet.client import ShetClient
 from gateway import Gateway
 
 
+def get_args():
+	import argparse
+	parser = argparse.ArgumentParser(description="SHETSource router.")
+	parser.add_argument("device", default="/dev/arduino", nargs="?",
+	                    help="The /dev device of the arduino. default=/dev/arduino")
+	return parser.parse_args()
+
+
 if __name__ == "__main__":
+	args = get_args()
+	
 	# Connect to SHET.
 	shet = ShetClient()
 	shet.install()
@@ -19,7 +29,6 @@ if __name__ == "__main__":
 	gateway = Gateway(shet)
 	
 	# ...and finally connect the gateway to the serial port.
-	port = sys.argv[1] if len(sys.argv) >= 2 else "/dev/ttyUSB0"
-	SerialPort(gateway, port, reactor, baudrate=115200)
+	SerialPort(gateway, args.device, reactor, baudrate=115200)
 	
 	reactor.run()
