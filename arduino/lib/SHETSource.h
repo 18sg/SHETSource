@@ -3,10 +3,21 @@
 
 #define ASSERT(cond)
 
+#ifndef NUM_ACTIONS
 #define NUM_ACTIONS    10
+#endif
+
+#ifndef NUM_EVENTS
 #define NUM_EVENTS     10
+#endif
+
+#ifndef NUM_PROPERTIES
 #define NUM_PROPERTIES 10
+#endif
+
+#ifndef PING_INTERVAL
 #define PING_INTERVAL  2500
+#endif
 
 /* Number of times to repeat the reset byte. */
 #define LENGTH_OF_RESET_COMMAND 10
