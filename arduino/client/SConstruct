@@ -1,0 +1,10 @@
+env = Environment(tools=["default", "arduino"])
+env.ConfigureBoard("atmega328")
+core = env.ArduinoCore()
+
+env.Append(CCFLAGS="-DSERIAL_CONN")
+
+shetsource_lib = env.ArduinoLibrary("shetsource", "../lib")
+
+client_example = env.Sketch("client_example", ["client_example.cpp", shetsource_lib, core])
+env.Upload(client_example)
