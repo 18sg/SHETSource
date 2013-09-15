@@ -18,6 +18,14 @@ def get_args():
 	return parser.parse_args()
 
 
+class StoppingGateway(Gateway):
+	"""A gateway that stops the reactor when the connection is lost."""
+	
+	def  connectionLost(self, reason):
+		Gateway.connectionLost(self, reason)
+		reactor.stop()
+
+
 if __name__ == "__main__":
 	args = get_args()
 	
@@ -26,7 +34,7 @@ if __name__ == "__main__":
 	shet.install()
 	
 	# Connect a gateway to shet
-	gateway = Gateway(shet)
+	gateway = StoppingGateway(shet)
 	
 	# ...and finally connect the gateway to the serial port.
 	SerialPort(gateway, args.device, reactor, baudrate=115200)

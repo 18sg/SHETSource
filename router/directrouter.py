@@ -16,6 +16,13 @@ def get_args():
 	return parser.parse_args()
 
 
+class StoppingClient(Client):
+	
+	def  connectionLost(self, reason):
+		Client.connectionLost(self, reason)
+		reactor.stop()
+
+
 if __name__ == "__main__":
 	args = get_args()
 	
@@ -24,7 +31,7 @@ if __name__ == "__main__":
 	shet.install()
 	
 	# Connect a client to shet
-	client = Client(shet)
+	client = StoppingClient(shet)
 	
 	# ...and finally connect the client to the serial port.
 	SerialPort(client, args.device, reactor, baudrate=57600)
