@@ -47,7 +47,7 @@ namespace SHETSource {
 	typedef int event_id_t;
 	typedef int property_id_t;
 	
-	class Client;
+	class SHETClient;
 	
 	template <class id_t> class Local;
 	class LocalAction;
@@ -58,13 +58,13 @@ namespace SHETSource {
 	template <class id_t>
 	class Local {
 		protected:
-			Client *client;
+			SHETClient *client;
 			char   *address;
 			id_t    id;
 		
 		public:
 			void
-			Init(Client *client, id_t id)
+			Init(SHETClient *client, id_t id)
 			{
 				this->client  = client;
 				this->id      = id;
@@ -147,7 +147,7 @@ namespace SHETSource {
 	 * limited extent such that usage to those familiar with SHET should be
 	 * reasonably intuitive.
 	 */
-	class Client {
+	class SHETClient {
 		protected:
 			Comms *comms;
 			
@@ -191,7 +191,7 @@ namespace SHETSource {
 			 * @param address A relative address at which this client should appear
 			 *        under in shet.
 			 */
-			Client(Comms *comms, char *address);
+			SHETClient(Comms *comms, char *address);
 			
 			void Init(void);
 			

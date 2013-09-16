@@ -7,7 +7,7 @@ using namespace SHETSource;
 
 
 bool
-Client::Read(uint8_t *buf, int len)
+SHETClient::Read(uint8_t *buf, int len)
 {
 	bool success;
 	success = comms->Read(buf, len);
@@ -20,7 +20,7 @@ Client::Read(uint8_t *buf, int len)
 
 
 bool
-Client::Write(uint8_t *buf, int len)
+SHETClient::Write(uint8_t *buf, int len)
 {
 	bool success;
 	success = comms->Write(buf, len);
@@ -33,7 +33,7 @@ Client::Write(uint8_t *buf, int len)
 
 
 bool
-Client::Write(char *str)
+SHETClient::Write(char *str)
 {
 	bool success;
 	success = comms->Write(str);

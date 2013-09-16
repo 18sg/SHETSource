@@ -7,14 +7,14 @@ using namespace SHETSource;
 
 
 void
-Client::OnRcvReset(void)
+SHETClient::OnRcvReset(void)
 {
 	ORState(STATUS_RESETTING);
 }
 
 
 void
-Client::OnRcvPing(void)
+SHETClient::OnRcvPing(void)
 {
 	int state = GetState();
 	WriteCommand(COMMAND_RETURN);
@@ -23,7 +23,7 @@ Client::OnRcvPing(void)
 
 
 void
-Client::OnRcvCallAction(void)
+SHETClient::OnRcvCallAction(void)
 {
 	action_id_t action_id;
 	if (!ReadActionID(&action_id)) return;
@@ -38,7 +38,7 @@ Client::OnRcvCallAction(void)
 
 
 void
-Client::OnRcvSetProperty(void)
+SHETClient::OnRcvSetProperty(void)
 {
 	property_id_t property_id;
 	if (!ReadPropertyID(&property_id)) return;
@@ -53,7 +53,7 @@ Client::OnRcvSetProperty(void)
 
 
 void
-Client::OnRcvGetProperty(void)
+SHETClient::OnRcvGetProperty(void)
 {
 	property_id_t property_id;
 	if (!ReadPropertyID(&property_id)) return;

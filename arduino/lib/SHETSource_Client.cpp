@@ -6,7 +6,7 @@
 using namespace SHETSource;
 
 
-Client::Client(Comms *comms, char *address) :
+SHETClient::SHETClient(Comms *comms, char *address) :
 comms(comms),
 address(address)
 {
@@ -27,7 +27,7 @@ address(address)
 
 
 void
-Client::Init(void)
+SHETClient::Init(void)
 {
 	status_led = 13;
 	pinMode(status_led, OUTPUT);
@@ -39,7 +39,7 @@ Client::Init(void)
 
 
 void
-Client::DoSHET(void)
+SHETClient::DoSHET(void)
 {
 	/* Do not return control to the program until the reset has completed. */
 	do {
@@ -49,7 +49,7 @@ Client::DoSHET(void)
 
 
 void
-Client::MainLoop(void)
+SHETClient::MainLoop(void)
 {
 	if (GetState() & STATUS_RESETTING) {
 		InitialiseWithServer();
@@ -69,7 +69,7 @@ Client::MainLoop(void)
 
 
 void
-Client::HandleRequests(void)
+SHETClient::HandleRequests(void)
 {
 	if (comms->Available()) {
 		
@@ -92,7 +92,7 @@ Client::HandleRequests(void)
 
 
 void
-Client::InitialiseWithServer(void)
+SHETClient::InitialiseWithServer(void)
 {
 	/* If the remote end is trying to write then we can't send a reset. */
 	digitalWrite(status_led, LOW);
@@ -140,28 +140,28 @@ Client::InitialiseWithServer(void)
 
 
 status_t
-Client::GetState(void)
+SHETClient::GetState(void)
 {
 	return state;
 }
 
 
 void
-Client::SetState(status_t val)
+SHETClient::SetState(status_t val)
 {
 	state = val;
 }
 
 
 void
-Client::ORState(status_t val)
+SHETClient::ORState(status_t val)
 {
 	state |= val;
 }
 
 
 void
-Client::UpdateStatusLED(void)
+SHETClient::UpdateStatusLED(void)
 {
 	uint8_t blink_pattern;
 	
@@ -181,7 +181,7 @@ Client::UpdateStatusLED(void)
 
 
 action_id_t
-Client::GetNextActionID(void)
+SHETClient::GetNextActionID(void)
 {
 	action_id_t i;
 	for (i = 0; i < NUM_ACTIONS; i++)
@@ -193,7 +193,7 @@ Client::GetNextActionID(void)
 
 
 event_id_t
-Client::GetNextEventID(void)
+SHETClient::GetNextEventID(void)
 {
 	event_id_t i;
 	for (i = 0; i < NUM_EVENTS; i++)
@@ -205,7 +205,7 @@ Client::GetNextEventID(void)
 
 
 property_id_t
-Client::GetNextPropertyID(void)
+SHETClient::GetNextPropertyID(void)
 {
 	property_id_t i;
 	for (i = 0; i < NUM_PROPERTIES; i++)
@@ -220,7 +220,7 @@ Client::GetNextPropertyID(void)
 
 
 LocalAction *
-Client::AddAction(char *address, void (*callback)(void))
+SHETClient::AddAction(char *address, void (*callback)(void))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -232,7 +232,7 @@ Client::AddAction(char *address, void (*callback)(void))
 
 
 LocalAction *
-Client::AddAction(char *address, void (*callback)(int value))
+SHETClient::AddAction(char *address, void (*callback)(int value))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -244,7 +244,7 @@ Client::AddAction(char *address, void (*callback)(int value))
 
 
 LocalAction *
-Client::AddAction(char *address, int (*callback)(void))
+SHETClient::AddAction(char *address, int (*callback)(void))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -256,7 +256,7 @@ Client::AddAction(char *address, int (*callback)(void))
 
 
 LocalAction *
-Client::AddAction(char *address, int (*callback)(int value))
+SHETClient::AddAction(char *address, int (*callback)(int value))
 {
 	action_id_t id = GetNextActionID();
 	ASSERT(id > 0);
@@ -267,7 +267,7 @@ Client::AddAction(char *address, int (*callback)(int value))
 }
 
 void
-Client::RemoveAction(LocalAction *action)
+SHETClient::RemoveAction(LocalAction *action)
 {
 	action->Remove();
 }
@@ -277,7 +277,7 @@ Client::RemoveAction(LocalAction *action)
 
 
 LocalEvent *
-Client::AddEvent(char *address)
+SHETClient::AddEvent(char *address)
 {
 	event_id_t id = GetNextEventID();
 	ASSERT(id > 0);
@@ -289,7 +289,7 @@ Client::AddEvent(char *address)
 
 
 void
-Client::RemoveEvent(LocalEvent *event)
+SHETClient::RemoveEvent(LocalEvent *event)
 {
 	event->Remove();
 }
@@ -299,7 +299,7 @@ Client::RemoveEvent(LocalEvent *event)
 
 
 LocalProperty *
-Client::AddProperty(char *address,
+SHETClient::AddProperty(char *address,
                     void (*set_callback)(int value),
                     int  (*get_callback)(void))
 {
@@ -312,7 +312,7 @@ Client::AddProperty(char *address,
 }
 
 LocalProperty *
-Client::AddProperty(char *address,
+SHETClient::AddProperty(char *address,
                     int  *var)
 {
 	property_id_t id = GetNextPropertyID();
@@ -326,7 +326,7 @@ Client::AddProperty(char *address,
 
 
 void
-Client::RemoveProperty(LocalProperty *property)
+SHETClient::RemoveProperty(LocalProperty *property)
 {
 	property->Remove();
 }
