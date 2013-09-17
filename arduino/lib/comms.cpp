@@ -2,7 +2,7 @@
 #include "pins.h"
 #include "comms.h"
 
-#ifndef SERIAL_CONN
+#ifdef DIRECT_CONN
 Comms::Comms(Pins *new_pins)
 	: pins(new_pins)
 	, buffer_head(0)
@@ -207,7 +207,9 @@ Comms::ReadToBuffer()
 	return true;
 }
 
-#else
+#endif
+#ifdef SERIAL_CONN
+
 Comms::Comms(long speed)
 {
 	Serial.begin(speed);
@@ -268,6 +270,71 @@ bool
 Comms::Available(void)
 {
 	return Serial.available();
+}
+
+#endif
+#ifdef ENET_CONN
+
+Comms::Comms(EthernetClient *enet_client)
+	:enet_client(enet_client)
+{
+}
+
+bool
+Comms::Write(uint8_t byte)
+{
+	enet_client->write(byte);
+	return true;
+}
+
+bool
+Comms::Write(uint8_t *buf, int len)
+{
+	enet_client->write(buf, len);
+	return true;
+}
+
+bool
+Comms::Write(char *str)
+{
+	enet_client->write(str);
+	enet_client->write((uint8_t)0);
+	return true;
+}
+
+int
+Comms::Read()
+{
+	// Wait for TIMEOUT_CYCLES micros, or until the serial is available.
+	unsigned long time = micros();
+	while (!enet_client->available()) {
+		if (micros() - time >= TIMEOUT_CYCLES)
+			return -1;
+	}
+	
+	return enet_client->read();
+}
+
+bool
+Comms::Read(uint8_t *buf, int len)
+{
+	int offset;
+	int data;
+	for (offset = 0; offset < len; offset ++) {
+		data = Read();
+		if (data != -1) {
+			*(buf + offset) = (uint8_t) data;
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool
+Comms::Available(void)
+{
+	return enet_client->available();
 }
 
 #endif

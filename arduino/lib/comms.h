@@ -1,8 +1,14 @@
 #ifndef COMMS_H
 #define COMMS_H
 
-// define this to enable serial.
-// #define SERIAL_CONN
+#if !(defined SERIAL_CONN || defined ENET_CONN)
+#define DIRECT_CONN
+#endif
+
+#ifdef ENET_CONN
+#include <Ethernet.h>
+#endif
+
 
 #define COMMS_CLOCK_PERIOD 100ul
 #define TIMEOUT_CYCLES 500000ul
@@ -14,10 +20,14 @@ class Comms;
 
 class Comms {
 	public:
-#ifndef SERIAL_CONN
-		Comms(Pins *new_pins);
-#else
+#ifdef SERIAL_CONN
 		Comms(long speed);
+#endif
+#ifdef ENET_CONN
+		Comms(EthernetClient *enet_client);
+#endif
+#ifdef DIRECT_CONN
+		Comms(Pins *new_pins);
 #endif
 		
 		bool Write(uint8_t byte);
@@ -29,7 +39,7 @@ class Comms {
 		
 		bool Available(void);
 	
-#ifndef SERIAL_CONN
+#ifdef DIRECT_CONN
 	private:
 		Pins *pins;
 		void Clock(void);
@@ -42,6 +52,10 @@ class Comms {
 		uint8_t buffer[COMMS_BUFFER_SIZE];
 		
 		bool ReadToBuffer(void);
+#endif
+#ifdef ENET_CONN
+	private:
+		EthernetClient *enet_client;
 #endif
 };
 
