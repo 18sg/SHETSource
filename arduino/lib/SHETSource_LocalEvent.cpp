@@ -3,8 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
-
+namespace SHETSource {
 
 void
 LocalEvent::Add(char *address)
@@ -73,4 +72,6 @@ LocalEvent::Unregister(void)
 		client->WriteCommand(COMMAND_REMOVE_EVENT);
 		client->WriteEventID(&id);
 	}
+}
+
 }

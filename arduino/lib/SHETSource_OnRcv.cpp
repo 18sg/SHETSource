@@ -3,8 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
-
+namespace SHETSource {
 
 void
 Client::OnRcvReset(void)
@@ -64,4 +63,6 @@ Client::OnRcvGetProperty(void)
 	}
 	
 	properties[property_id].Get();
+}
+
 }

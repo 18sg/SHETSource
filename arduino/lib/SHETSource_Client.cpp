@@ -3,8 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
-
+namespace SHETSource {
 
 Client::Client(Comms *comms, char *address) :
 comms(comms),
@@ -331,3 +330,4 @@ Client::RemoveProperty(LocalProperty *property)
 	property->Remove();
 }
 
+}

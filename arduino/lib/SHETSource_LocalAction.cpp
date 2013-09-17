@@ -3,8 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
-
+namespace SHETSource{
 
 void
 LocalAction::Add(char *address, void (*callback)(void))
@@ -126,4 +125,6 @@ LocalAction::Unregister(void)
 		client->WriteCommand(COMMAND_REMOVE_ACTION);
 		client->WriteActionID(&id);
 	}
+}
+
 }

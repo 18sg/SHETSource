@@ -3,7 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
+namespace SHETSource {
 
 
 void
@@ -86,4 +86,6 @@ LocalProperty::Unregister(void)
 		client->WriteCommand(COMMAND_REMOVE_PROPERTY);
 		client->WritePropertyID(&id);
 	}
+}
+
 }

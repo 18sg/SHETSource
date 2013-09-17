@@ -3,8 +3,7 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-using namespace SHETSource;
-
+namespace SHETSource {
 
 bool
 Client::Read(uint8_t *buf, int len)
@@ -42,4 +41,6 @@ Client::Write(char *str)
 		ORState(STATUS_WRITE_FAIL);
 	
 	return success;
+}
+
 }
