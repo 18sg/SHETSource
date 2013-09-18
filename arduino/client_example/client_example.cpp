@@ -3,13 +3,9 @@
 #include "comms.h"
 #include "SHETSource.h"
 
-
-#ifndef SERIAL_CONN
 DirectPins pins = DirectPins(2,3);
 Comms comms = Comms(&pins);
-#else
-Comms comms = Comms(57600);
-#endif
+
 
 /* All addresses from this arduino will be prefixed with the string given as the
  * argument below, don't forget the trailing slash if you want it to be a
@@ -47,12 +43,8 @@ doit(int value)
 void
 setup()
 {
-	Serial.begin(57600);
-#ifndef SERIAL_CONN
 	pins.Init();
-#endif
 	client.Init();
-	
 	
 	/* An action -- increments an integer argument. */
 	client.AddAction("doit", doit);
@@ -72,11 +64,6 @@ setup()
 	digitalWrite(7, HIGH);
 	button_down = false;
 	press_event = client.AddEvent("btn");
-	
-#ifndef SERIAL_CONN
-	Serial.begin(9600);
-	Serial.print("Hi!");
-#endif
 }
 
 void
