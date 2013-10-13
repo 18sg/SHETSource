@@ -46,6 +46,7 @@ doit(int value)
 void
 setup()
 {
+	Serial.begin(57600);
 	client.Init();
 	
 	/* An action -- increments an integer argument. */
